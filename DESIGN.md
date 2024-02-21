@@ -76,6 +76,7 @@ static bool handleInput(void* arg);
 
 #### Overview
 The client will run as follows:
+```
 Validate that either 3 or 4 arguments were passed in the command line
 Verify hostname (or IP address) and port number and determine player or spectator mode
 Initialize display
@@ -86,9 +87,10 @@ If player mode
 		Wait for input
 Call handleInput which sends keystrokes to the server
 If spectator mode
-		Display entire grid
-		Wait for `GOLD` and `DISPLAY` messages and continuously update the display as players move and collect gold. 
-	Calls handleMessage() to parse message and update display accordingly
+    Display entire grid
+    Wait for `GOLD` and `DISPLAY` messages and continuously update the display as players move and collect gold. 
+Calls handleMessage() to parse message and update display accordingly
+```
 
 
 #### `int main(int argc, char* argv[])`:
@@ -104,8 +106,6 @@ The `main` function calls `parseArgs` and other functions.
 	validate command line arguments
 	initialize message module
 	get serverAddress
-
-
 	print assigned port number
 	if there are 4 arguments:
 		send PLAY [playername]
@@ -185,9 +185,8 @@ There is no interaction with the user.
 
 ### Inputs and outputs
 
-> Briefly describe the inputs (map file) and outputs (to terminal).
 Inputs: Map file
-Outputs: Message to terminal 
+Outputs: Message to terminal, and messages to clients.
 
 We log all communication messages originating from the server (along with destination) and debug messages to a log file log.txt.
 
@@ -211,7 +210,7 @@ The server will run as follows:
 	initialize host
 	keep waiting and processing messages until game over
 
-#### void process_message(char* message): processes messages from the clients and sends back messages when necessary
+`void process_message(char* message)`: processes messages from the clients and sends back messages when necessary
 
 
 ### Major data structures
