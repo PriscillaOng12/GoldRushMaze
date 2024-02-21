@@ -17,33 +17,159 @@ The *client* acts in one of two modes:
 
 ### User interface
 
-See the requirements spec for both the command-line and interactive UI.
+The user will see a CURSES display, the top line of which shall provide game status, and the rest of the rows will display the game state from the client’s perspective.
+
+The user interfaces with the game by sending keystrokes input through stdin.
+
+In player mode, the user interfaces with the program through keystrokes (specifics provided in the Requirements specifications).
+
+
+In spectator mode, the client does not interface with the program, but rather watches as a player, or players, move around the map.'
+
+For more details, see the requirements spec for both the command-line and interactive UI.
 
 ### Inputs and outputs
 
-Inputs: The player will have eight choices of keys for the eight directions they can move (cardinal directions + diagonals), and capital letters to move as far as possible in a direction, and one more to quit the program, making a total of 8+8+1=17 valid keystrokes. See the requirements spec for specific keys.
+The user interfaces first through the command line where the input is in the form:
+``` 
+./server map.txt [seed]
+```
+Assuming success, the server module will print out its port number. A client can join the game with the following syntax in a separate terminal window:
+```
+./client hostname port [playername]
+```
+`hostname` is the server IP
+`port` if the port number that the server expects messages from
+`playername` is optional, but if provided, the client will be in player mode. Otherwise, the client joins the game in spectator mode.
 
-Output: Graphical display of visible map, and current status of game (e.g. how many players, how many nuggets)
+**Spectator Inputs (Keystrokes)**
+All keystrokes are sent immediately to the server.
+The only valid keystroke for the spectator is
+
+* `Q` quit the game.
+
+**Player Inputs (keystrokes)**
+The player will have eight choices of keys for the eight directions they can move (cardinal directions + diagonals), and capital letters to move as far as possible in a direction, and one more to quit the program, making a total of 8+8+1=17 valid keystrokes. See the requirements spec for specific keys.
+
+**Outputs**
+The output display will depend on the client mode. In **spectator mode**, the entire grid is displayed, showing all the gold to be collected and all the players. In **player mode**, only parts of the map and the contained information (i.e. nuggets and players) are displayed, according to visibility. It updates as the player(s) gathers the nuggets and as the player moves around the map, changing the visibility of the player.
+
+**Logging**
 
 We log all communication messages originating from the player (along with destination) and debug messages to a log file log.txt.
 
-### Functional decomposition into modules
+### Function prototypes
+```
+int main(int argc, char* argv[])
+static int parseArgs(const int argc, char* argv[]);
+static bool setupWindow(void);
+static void playGame(const addr_t serverAddress);
+static bool handleMessages(void* arg, const addr_t* from, const char* message);
+static bool handleInput(void* arg);
+```
+ 
+### Function definitions and Pseudo code for logic/algorithmic flow
 
-We use no other modules, aside from ncurses to display the server output.
+#### Overview
+The client will run as follows:
+Validate that either 3 or 4 arguments were passed in the command line
+Verify hostname (or IP address) and port number and determine player or spectator mode
+Initialize display
+Initialize network and join game with a `PLAY` or `SPECTATE` message to server, accordingly
+Receive `GRID`, `GOLD`, and `DISPLAY` messages from server
+Calls handleMessage() to appropriately react to each of these messages
+If player mode
+		Wait for input
+Call handleInput which sends keystrokes to the server
+If spectator mode
+		Display entire grid
+		Wait for `GOLD` and `DISPLAY` messages and continuously update the display as players move and collect gold. 
+	Calls handleMessage() to parse message and update display accordingly
 
-### Pseudo code for logic/algorithmic flow
 
-> For each function write pseudocode indented by a tab, which in Markdown will cause it to be rendered in literal form (like a code block).
-> Much easier than writing as a bulleted list!
-> See the Server section for an example.
+#### `int main(int argc, char* argv[])`:
+The `main` function calls `parseArgs` and other functions.
+```
+	call parseArgs
+	call playGame
+```
 
-> Then briefly describe each of the major functions, perhaps with level-4 #### headers.
+#### `static int parseArgs(const int argc, char* argv[])`:
+`parseArgs` takes the command line arguments as parameters, validates them, and assigns them to be passed through pointers if valid.
+```
+	validate command line arguments
+	initialize message module
+	get serverAddress
+
+
+	print assigned port number
+	if there are 4 arguments:
+		send PLAY [playername]
+	if there are 3 arguments
+		Send SPECTATE
+	else:
+		print error message for incorrect number of arguments
+		exit
+```
+
+#### `static bool setupWindow(void)`:
+`setupWindow` sets up a game window using the ncurse library with a given row and column size.
+```
+	initialize ncurses window 
+	set window to nRows nColumns
+	call cbreak
+```
+
+#### `static void playGame(const addr_t serverAddress)`:
+`playGame` is essentially the main driver of the client. It runs the message loop until the game is quit and will continuously parse received messages and send messages through the loop. It will also call print display to reprint the display.
+```
+	while player hasn’t quit game:
+		call messageLoop with NULL for handleInput and handleMessage
+```
+
+#### `static bool handleMessages(void* arg, const addr_t* from, const char* message)`:
+`handleMessage` parses the incoming message to interpret the type of message and displays information onto the game window Everytime a message is received from the server, this function is called to handle the message. The details of each received message (`QUIT`, `OK`, `GRID`, `GOLD`, `DISPLAY`, and `ERROR`) are explained further in the requirements specifications.
+```
+	check message for NULL
+	parses the message
+	if first word of message == OK:
+		initialize player struct with playerID
+	if first word of message == GRID:
+		initialize size of grid
+		call setupWindow
+	if first word of message == GOLD:
+		if client is player:
+			update players gold value
+			update display message
+		if client is spectator:
+			update how much gold is left
+	if first word of message == DISPLAY:
+		call printDisplay to load display and update from message
+	if first word of message == QUIT:
+		end loop
+	if first word of message == ERROR:
+		print error message
+```
+
+
+#### `static bool handleInput(void* arg)`;
+`handleInput` waits for keyboard input from the user and sends a corresponding message to the server.
+```
+    Check if serverPointer is null or invalid
+        If true, print error and exit function with true
+
+    While character input is not 'q':
+        Create and send "KEY " message with input character to server
+
+    Exit and return true if 'q' is pressed, otherwise keep looping
+```
+
+
 
 ### Major data structures
+Create a `localclient_t data` structure in order to hold information for each of the players that join the client.
 
-> A language-independent description of the major data structure(s) in this program.
-
-> Mention, but do not describe, any libcs50 data structures you plan to use.
+This localclient data structure keeps track of the player’s characteristics such as playerID, purse, and the amount of gold remaining. It also keeps track of the size of the window, whether the player is a spectator, and the port number.
 
 ---
 
