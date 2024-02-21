@@ -23,7 +23,6 @@ The user interfaces with the game by sending keystrokes input through stdin.
 
 In player mode, the user interfaces with the program through keystrokes (specifics provided in the Requirements specifications).
 
-
 In spectator mode, the client does not interface with the program, but rather watches as a player, or players, move around the map.'
 
 For more details, see the requirements spec for both the command-line and interactive UI.
@@ -39,7 +38,9 @@ Assuming success, the server module will print out its port number. A client can
 ./client hostname port [playername]
 ```
 `hostname` is the server IP
-`port` if the port number that the server expects messages from
+
+`port` is the port number that the server expects messages from
+
 `playername` is optional, but if provided, the client will be in player mode. Otherwise, the client joins the game in spectator mode.
 
 **Spectator Inputs (Keystrokes)**
