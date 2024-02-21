@@ -43,15 +43,18 @@ Assuming success, the server module will print out its port number. A client can
 `playername` is optional, but if provided, the client will be in player mode. Otherwise, the client joins the game in spectator mode.
 
 **Spectator Inputs (Keystrokes)**
+
 All keystrokes are sent immediately to the server.
 The only valid keystroke for the spectator is
 
 * `Q` quit the game.
 
 **Player Inputs (keystrokes)**
+
 The player will have eight choices of keys for the eight directions they can move (cardinal directions + diagonals), and capital letters to move as far as possible in a direction, and one more to quit the program, making a total of 8+8+1=17 valid keystrokes. See the requirements spec for specific keys.
 
 **Outputs**
+
 The output display will depend on the client mode. In **spectator mode**, the entire grid is displayed, showing all the gold to be collected and all the players. In **player mode**, only parts of the map and the contained information (i.e. nuggets and players) are displayed, according to visibility. It updates as the player(s) gathers the nuggets and as the player moves around the map, changing the visibility of the player.
 
 **Logging**
