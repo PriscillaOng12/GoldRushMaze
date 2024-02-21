@@ -241,17 +241,13 @@ A module that handles the spectator data: their connection info. It handles send
 
 ### Functional decomposition
 
-#### `spectator_t* spectator_new(char* conn_info)`
-Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+`spectator_t* spectator_new(char* conn_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
-#### `void spectator_get_map(spectator_t* spectator, grid_t* grid)`
-Constructs and sends display message to spectator.
+`void spectator_get_map(spectator_t* spectator, grid_t* grid)`: Constructs and sends display message to spectator.
 
-#### `void spectator_quit(spectator_t* player)`
-Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
+`void spectator_quit(spectator_t* player)`: Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
 
-#### `spectator_delete(spectator_t* spectator)`
-Deallocates memory associated with the spectator.
+`spectator_delete(spectator_t* spectator)`: Deallocates memory associated with the spectator.
 
 ### Pseudo code for logic/algorithmic flow
 
