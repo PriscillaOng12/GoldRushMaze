@@ -1,18 +1,14 @@
 # CS50 Nuggets
 ## Design Spec
-### Team name, term, year
-
-> This **template** includes some gray text meant to explain how to use the template; delete all of them in your document!
+### ctrl-zzz, Winter 2024
 
 According to the [Requirements Spec](REQUIREMENTS.md), the Nuggets game requires two standalone programs: a client and a server.
-Our design also includes x, y, z modules.
+Our design also includes Grid, Player, and Spectator modules.
 We describe each program and module separately.
 We do not describe the `support` library nor the modules that enable features that go beyond the spec.
 We avoid repeating information that is provided in the requirements spec.
 
-## Player
-
-> Teams of 3 students should delete this section.
+## Client
 
 The *client* acts in one of two modes:
 
@@ -21,32 +17,163 @@ The *client* acts in one of two modes:
 
 ### User interface
 
-See the requirements spec for both the command-line and interactive UI.
+The user will see a CURSES display, the top line of which shall provide game status, and the rest of the rows will display the game state from the client’s perspective.
 
-> You may not need much more.
+The user interfaces with the game by sending keystrokes input through stdin.
+
+In player mode, the user interfaces with the program through keystrokes (specifics provided in the Requirements specifications).
+
+In spectator mode, the client does not interface with the program, but rather watches as a player, or players, move around the map.'
+
+For more details, see the requirements spec for both the command-line and interactive UI.
 
 ### Inputs and outputs
 
-> Briefly describe the inputs (keystrokes) and outputs (display).
-> If you write to log files, or log to stderr, describe that here.
-> Command-line arguments are not 'input'.
+The user interfaces first through the command line where the input is in the form:
+``` 
+./server map.txt [seed]
+```
+Assuming success, the server module will print out its port number. A client can join the game with the following syntax in a separate terminal window:
+```
+./client hostname port [playername]
+```
+`hostname` is the server IP
 
-### Functional decomposition into modules
+`port` is the port number that the server expects messages from
 
-> List and briefly describe any modules that comprise your client, other than the main module.
+`playername` is optional, but if provided, the client will be in player mode. Otherwise, the client joins the game in spectator mode.
+
+**Spectator Inputs (Keystrokes)**
+
+All keystrokes are sent immediately to the server.
+The only valid keystroke for the spectator is
+
+* `Q` quit the game.
+
+**Player Inputs (keystrokes)**
+
+The player will have eight choices of keys for the eight directions they can move (cardinal directions + diagonals), and capital letters to move as far as possible in a direction, and one more to quit the program, making a total of 8+8+1=17 valid keystrokes. See the requirements spec for specific keys.
+
+**Outputs**
+
+The output display will depend on the client mode. In **spectator mode**, the entire grid is displayed, showing all the gold to be collected and all the players. In **player mode**, only parts of the map and the contained information (i.e. nuggets and players) are displayed, according to visibility. It updates as the player(s) gathers the nuggets and as the player moves around the map, changing the visibility of the player.
+
+**Logging**
+
+We log all communication messages originating from the player (along with destination) and debug messages to a log file log.txt.
+
+### Function prototypes
+```c
+int main(int argc, char* argv[])
+static int parseArgs(const int argc, char* argv[]);
+static bool setupWindow(void);
+static void playGame(const addr_t serverAddress);
+static bool handleMessages(void* arg, const addr_t* from, const char* message);
+static bool handleInput(void* arg);
+```
  
-### Pseudo code for logic/algorithmic flow
+### Function definitions and Pseudo code for logic/algorithmic flow
 
-> For each function write pseudocode indented by a tab, which in Markdown will cause it to be rendered in literal form (like a code block).
-> Much easier than writing as a bulleted list!
-> See the Server section for an example.
+#### Overview
+The client will run as follows:
+```
+Validate that either 3 or 4 arguments were passed in the command line
+Verify hostname (or IP address) and port number and determine player or spectator mode
+Initialize display
+Initialize network and join game with a `PLAY` or `SPECTATE` message to server, accordingly
+Receive `GRID`, `GOLD`, and `DISPLAY` messages from server
+Calls handleMessage() to appropriately react to each of these messages
+If player mode
+		Wait for input
+Call handleInput which sends keystrokes to the server
+If spectator mode
+    Display entire grid
+    Wait for `GOLD` and `DISPLAY` messages and continuously update the display as players move and collect gold. 
+Calls handleMessage() to parse message and update display accordingly
+```
 
-> Then briefly describe each of the major functions, perhaps with level-4 #### headers.
+
+#### `int main(int argc, char* argv[])`:
+The `main` function calls `parseArgs` and other functions.
+```
+	call parseArgs
+	call playGame
+```
+
+#### `static int parseArgs(const int argc, char* argv[])`:
+`parseArgs` takes the command line arguments as parameters, validates them, and assigns them to be passed through pointers if valid.
+```
+	validate command line arguments
+	initialize message module
+	get serverAddress
+	print assigned port number
+	if there are 4 arguments:
+		send PLAY [playername]
+	if there are 3 arguments
+		Send SPECTATE
+	else:
+		print error message for incorrect number of arguments
+		exit
+```
+
+#### `static bool setupWindow(void)`:
+`setupWindow` sets up a game window using the ncurse library with a given row and column size.
+```
+	initialize ncurses window 
+	set window to nRows nColumns
+	call cbreak
+```
+
+#### `static void playGame(const addr_t serverAddress)`:
+`playGame` is essentially the main driver of the client. It runs the message loop until the game is quit and will continuously parse received messages and send messages through the loop. It will also call print display to reprint the display.
+```
+	while player hasn’t quit game:
+		call messageLoop with NULL for handleInput and handleMessage
+```
+
+#### `static bool handleMessages(void* arg, const addr_t* from, const char* message)`:
+`handleMessage` parses the incoming message to interpret the type of message and displays information onto the game window Everytime a message is received from the server, this function is called to handle the message. The details of each received message (`QUIT`, `OK`, `GRID`, `GOLD`, `DISPLAY`, and `ERROR`) are explained further in the requirements specifications.
+```
+	check message for NULL
+	parses the message
+	if first word of message == OK:
+		initialize player struct with playerID
+	if first word of message == GRID:
+		initialize size of grid
+		call setupWindow
+	if first word of message == GOLD:
+		if client is player:
+			update players gold value
+			update display message
+		if client is spectator:
+			update how much gold is left
+	if first word of message == DISPLAY:
+		call printDisplay to load display and update from message
+	if first word of message == QUIT:
+		end loop
+	if first word of message == ERROR:
+		print error message
+```
+
+
+#### `static bool handleInput(void* arg)`;
+`handleInput` waits for keyboard input from the user and sends a corresponding message to the server.
+```
+    Check if serverPointer is null or invalid
+        If true, print error and exit function with true
+
+    While character input is not 'q':
+        Create and send "KEY " message with input character to server
+
+    Exit and return true if 'q' is pressed, otherwise keep looping
+```
+
+
 
 ### Major data structures
+Create a `localclient_t data` structure in order to hold information for each of the players that join the client.
 
-> A language-independent description of the major data structure(s) in this program.
-> Mention, but do not describe, any libcs50 data structures you plan to use.
+This localclient data structure keeps track of the player’s characteristics such as playerID, purse, and the amount of gold remaining. It also keeps track of the size of the window, whether the player is a spectator, and the port number.
 
 ---
 
@@ -56,60 +183,215 @@ See the requirements spec for both the command-line and interactive UI.
 See the requirements spec for the command-line interface.
 There is no interaction with the user.
 
-> You may not need much more.
-
 ### Inputs and outputs
 
-> Briefly describe the inputs (map file) and outputs (to terminal).
-> If you write to log files, or log to stderr, describe that here.
-> Command-line arguments are not 'input'.
+Inputs: Map file
+Outputs: Message to terminal, and messages to clients.
+
+We log all communication messages originating from the server (along with destination) and debug messages to a log file log.txt.
 
 ### Functional decomposition into modules
 
-> List and briefly describe any modules that comprise your server, other than the main module.
+#### Grid 
+The grid module helps to manage the grid environment by loading the map, initializing the position of gold piles and player positions, updating game states, detecting gold nugget collection, writing player gameplay summaries and deallocating resources at the conclusion of the game.
+
+#### Player 
+The player module stores information for each player, such as position, visible cells, connection info, player name, nugget "purse", etc. It supports movement and nugget collection.
+
+#### Spectator
+The spectator mode is a simpler, but largely parallel, module to the Player, which stores connection info.
+
 
 ### Pseudo code for logic/algorithmic flow
 
-> For each function write pseudocode indented by a tab, which in Markdown will cause it to be rendered in literal form (like a code block).
-> Much easier than writing as a bulleted list!
-> For example:
-
 The server will run as follows:
+	validate arguments
+	call grid_load(), loading map file and initializing grid
+	initialize host
+	keep waiting and processing messages until game over
 
-	execute from a command line per the requirement spec
-	parse the command line, validate parameters
-	call initializeGame() to set up data structures
-	initialize the 'message' module
-	print the port number on which we wait
-	call message_loop(), to await clients
-	call gameOver() to inform all clients the game has ended
-	clean up
+`void process_message(char* message)`: processes messages from the clients and sends back messages when necessary
 
-
-> Then briefly describe each of the major functions, perhaps with level-4 #### headers.
 
 ### Major data structures
+We utilize a grid struct, which uses a 2-D array to store player position information and nugget information as well. We also use a player struct which stores information about the player like the player's letter. We also [FOR EXTRA CREDIT] store a hashmap which caches visibility.
 
-> Describe each major data structure in this program: what information does it represent, how does it represent the data, and what are its members.
-> This description should be independent of the programming language.
-> Mention, but do not describe, data structures implemented by other modules (such as the new modules you detail below, or any libcs50 data structures you plan to use).
-
----
-
-## XYZ module
-
-> Repeat this section for each module that is included in either the client or server.
+## Grid module
 
 ### Functional decomposition
 
-> List each of the main functions implemented by this module, with a phrase or sentence description of each.
+`grid_t* grid_load(char* filename)`: Loads the map file and initializes the game grid.
+
+`int grid_init_gold(grid_t* grid)`: Drops gold piles on the grid at the start of the game.
+
+`void grid_spawn_player(grid_t* grid)`: Randomly places a player onto a spot on the grid.
+
+`void grid_spawn_spectator(grid_t* grid)`: Places a spectator.
+
+`void grid_send_state(grid_t* grid, player_t* player)`: Sends the current game state to a player client.
+
+`void grid_send_state(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
+
+`void grid_game_over(grid_t* grid)`: Handles the end of the game by preparing a summary and cleaning up.
+
+`void grid_delete(grid_t* grid)`: Cleans up and deallocates memory associated with grid.
 
 ### Pseudo code for logic/algorithmic flow
 
-> For any non-trivial function, add a level-4 #### header and provide tab-indented pseudocode.
-> This pseudocode should be independent of the programming language.
+#### `grid_t* grid_load(char* filename)`:
+	Read the map file line by line
+	Parse each character in the file to form the grid
+
+#### `int grid_init_gold(grid_t* grid)`:
+	Calculate the number of gold piles to be dropped within a certain area
+	Iterate through the room spots to randomly 
+Drop gold nugget piles with at least 1 nugget per pile
+Update the grid to reflect the gold piles 
+
+#### `void grid_spawn_player(grid_t* grid)`:
+	Calculate random spot on the grid
+	Place new player with new symbol
+If player is already in spot
+		Calculate another random spot
+
+#### `void grid_spawn_spectator(grid_t* grid)`:
+	Calculate random spot on the grid
+	Place new spectator 
+	If spectator is already present
+		Kick them off and replace
+
+#### `void grid_send_state(grid_t* grid, player_t* player)`:
+	Create a message about current game state
+	Send the message to the specified player client.
+	
+#### `void grid_send_state(grid_t* grid, spectator_t* spectator)`:
+	Create a message about current game state
+	Send the message to the specified spectator client.
+
+#### `void grid_game_over(grid_t* grid)`:
+	Iterate over each player 
+	Calculate the final score 
+	Create summary containing purse contents, score and name
+	Send game summary to all clients
+	Terminate game
+	
+#### `void grid_delete(grid_t* grid)`:
+	Deallocate memory associated with the game grid 
+	
+### Major data structures
+Grid:
+- Implemented as a 2-D array data structure
+- Each cell holds information about the type of spot (boundary, hallway, nugget) and what is occupying the cell (either player or nugget pile).
+
+Player:
+- List with player's letter corresponding to index
+- Hold pointers to Player structs (defined later), which contains information such as player's letter symbol, name location and nuggets in purse
+
+## Player module
+
+A module that handles the player's data: their name, position, purse, and the cells they can see. It handles player movement, gold collection, visibility updates, and player quit/dropoff.
+
+### Functional decomposition
+
+`player_t* player_new(char* name, char* conn_info, int x, int y)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
+
+`void player_move(player_t* player) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
+
+`void player_collect_gold(player_t* player, int gold_x, int gold_y)`: Updates the player's purse and the location of the gold piles, and sends a `GOLD` message to all clients with updated locations.
+
+`void player_update_visibility(player_t* player)`: Updates the player's visibility layer. Called by `player_move`.
+
+`void player_quit(player_t* player, grid_t* grid)`: Called by grid module when a player quits. Gracefully handles quit, then calls `player_delete`.
+
+`player_delete(player_t* player)`: Deallocates memory associated with the player.
+
+### Pseudo code for logic/algorithmic flow
+
+#### `player_t* player_new(char* name, char* conn_info, int x, int y)`
+Trivial constructor for a new player.
+
+#### `void player_move(player_t* player, int dx, int dy, grid_t* grid) `
+```
+    if (player->x + dx, player->y + dy) is a valid move:
+        if there is a player in the new position:
+            call player_move on the other player with the opposite dx and dy
+            call update_visibility on the other player
+        update player's position
+        call update_visibility on the player
+        if there is a gold pile in the new position:
+            call player_collect_gold
+        send a DISPLAY message to all clients with updated locations
+    else:
+        do nothing
+```
+
+#### `void player_collect_gold(player_t* player, int gold_x, int gold_y, grid_t* grid)`
+```
+    update player's purse
+    update gold pile's value in grid
+    decrement number of remaining gold piles in grid
+    send a GOLD message to all clients with updated locations
+```
+#### `void player_update_visibility(player_t* player, grid_t* grid, hashmap_t* cache)`
+This function is cached **[FOR EXTRA CREDIT]** in a hashmap: if **any** previous player has been at the spot, we store all cells that are visible from that spot. If not, we compute the visibility layer from scratch and cache it.
+```
+    x, y = player's position
+    if (num_rows * x + y) is already cached:
+        player->visibility = player_visibility OR cached // element-wise OR
+    vis_cache = 2d array size of grid, initialized to 0s
+    for each cell (i, j) in the grid
+        compute functions get_y(x), get_x(y) for the line (point-slope)
+        visible = True
+        for p in [x, i]:
+            if (p, floor(get_y(p))) and (p, ceil(get_y(p))) are both walls:
+                visible = False
+        for q in [y, j]:
+            if (floor(get_x(q)), q) and (ceil(get_x(q)), q) are both walls:
+                visible = False
+        if visible:
+            player->visibility[i][j] = 1
+            cached[i][j] = 1
+    cached[num_rows * x + y] = vis_cache
+```
+[Note: this algorithm runs in O(mn(m+n)) time, where the grid has size (m,n). We could optimize to O(mn) at the cost of simplicity, using trigonometry.]
+
+#### `void player_quit(player_t* player, grid_t* grid)`
+Trivial function that removes player from grid, then calls `player_delete`.
+#### `player_delete(player_t* player)`
+Trivial function to delete.
 
 ### Major data structures
 
-> Describe each major data structure in this module: what information does it represent, how does it represent the data, and what are its members.
-> This description should be independent of the programming language.
+The only extra data structure is the visibility layer, which is a 2D Boolean array.
+
+## Spectator module
+
+A module that handles the spectator data: their connection info. It handles sending map data to spectator, and spectator quit/dropoff.
+
+### Functional decomposition
+
+`spectator_t* spectator_new(char* conn_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+
+`void spectator_get_map(spectator_t* spectator, grid_t* grid)`: Constructs and sends display message to spectator.
+
+`void spectator_quit(spectator_t* player)`: Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
+
+`spectator_delete(spectator_t* spectator)`: Deallocates memory associated with the spectator.
+
+### Pseudo code for logic/algorithmic flow
+
+#### `spectator_t* spectator_new(char* conn_info)`
+Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+
+#### `void spectator_get_map(spectator_t* spectator, grid_t* grid)`
+Constructs and sends display message to spectator.
+
+#### `void spectator_quit(spectator_t* spectator)`
+Trivial function, which gracefully handles
+
+#### `spectator_delete(spectator_t* spectator)`
+Trivial function to deallocate memory associated with the spectator.
+
+### Major data structures
+
+No specific data structures are used.
