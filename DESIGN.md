@@ -62,7 +62,7 @@ The output display will depend on the client mode. In **spectator mode**, the en
 We log all communication messages originating from the player (along with destination) and debug messages to a log file log.txt.
 
 ### Function prototypes
-```
+```c
 int main(int argc, char* argv[])
 static int parseArgs(const int argc, char* argv[]);
 static bool setupWindow(void);
