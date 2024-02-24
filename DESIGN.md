@@ -248,7 +248,7 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
 Drop gold nugget piles with at least 1 nugget per pile
 Update the grid to reflect the gold piles 
 
-#### `void grid_spawn_player(grid_t* grid)`:
+#### `void grid_spawn_player(grid_t* grid, char* name, char* conn_info)`:
 	Calculate random spot on the grid
 	Place new player with new symbol
 If player is already in spot
@@ -295,7 +295,7 @@ A module that handles the player's data: their name, position, purse, and the ce
 
 `player_t* player_new(char* name, char* conn_info, int x, int y)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
 
-`void player_move(player_t* player) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
+`void player_move(player_t* player, int dx, int dy) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
 
 `void player_collect_gold(player_t* player, int gold_x, int gold_y)`: Updates the player's purse and the location of the gold piles, and sends a `GOLD` message to all clients with updated locations.
 
