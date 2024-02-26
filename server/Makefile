@@ -23,11 +23,11 @@ gridtest.o: $(GRIDTESTSRC)
 
 playertest.o: $(PLAYERTESTSRC)
 # Compile executables
-gridtest: $(OBJECTS) $(LIBFILES)
-	$(CC) $(CFLAGS) $^ gridtest.o $(LIBS) -o $@ -lm
+gridtest: $(OBJECTS) $(LIBFILES) gridtest.o
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
-playertest: $(OBJECTS)
-	$(CC) $(CFLAGS) $^ playertest.o $(LIBS) -o $@ -lm
+playertest: $(OBJECTS) playertest.o
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 # Clean target
 clean:

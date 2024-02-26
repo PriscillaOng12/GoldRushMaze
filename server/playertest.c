@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     int nr = grid_getnrows(grid);
     int nc = grid_getncols(grid);
 
-    player_t* player = player_new(NULL, "tester", 3, 4, nr, nc);
+    player_t* player = player_new(NULL, "tester", 13, 13, nr, nc);
 
     player_update_visibility(player, grid);
     int** res =  player_get_visibility(player);
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         printf("\n");
     }
     printf("----------------------------------------\n");
-    player_moveto(player, 13, 13);
+    player_moveto(player, 19, 30);
     player_update_visibility(player, grid);
     for (int i = 0; i < nr; i++) {
         for (int j = 0; j < nc; j++) {

@@ -21,6 +21,7 @@ typedef struct grid {
    int* num_players;
    int* rows;
    int* columns;
+   int* playerCount;
 } grid_t;
 
 
