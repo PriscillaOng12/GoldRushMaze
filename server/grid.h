@@ -14,5 +14,6 @@ int grid_init_gold(grid_t* grid);
 void grid_delete(grid_t* grid);
 int grid_getnrows(grid_t* grid);
 int grid_getncols(grid_t* grid);
+int grid_getplayers(grid_t* grid);
 char** grid_getcells(grid_t* grid);
 int** grid_getnuggets(grid_t* grid);
