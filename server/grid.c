@@ -6,16 +6,19 @@
 * Eliana Stanford, Winter 2024
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include "grid.h"
+#include "player.h"
 
 
 typedef struct grid {
    char** cells;
    int** nuggets;
+   player_t* players[26];
+   int* num_players;
    int* rows;
    int* columns;
 } grid_t;
@@ -160,10 +163,7 @@ grid_t* grid_load(FILE* file) {
 int grid_init_gold(grid_t* grid) {
     printf("Before placing gold: Rows = %d, Columns = %d\n", *grid->rows, *grid->columns);
 
-
-
    printf("Initializing gold placement...\n");
-
 
    int GoldTotal = 250;
    int GoldMinNumPiles = 10;
@@ -210,6 +210,7 @@ int grid_init_gold(grid_t* grid) {
    return num_gold;
 }
 
+
 void grid_delete(grid_t* grid) {
    // Deallocate memory associated with the game grid
    for (int i = 0; i < *grid->rows; i++) {
@@ -234,60 +235,60 @@ void grid_delete(grid_t* grid) {
 }
 
 
-// void grid_spawn_player(grid_t* grid, player_t* player) {
-//     // Calculate random spot on the grid
-//     srand(time(NULL));
-//     int x
-//     int y;
+void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
+    // Calculate random spot on the grid
+    srand(time(NULL));
+    int x;
+    int y;
 
-
-//    while (1) {
-//         x = rand() % grid->rows;
-//         y = rand() % grid->cols;
+   while (1) {
+        x = rand() % *grid->rows;
+        y = rand() % *grid->columns;
       
-//         if (grid->cells[x][y] > 0) { // if its gold
-//             // Place new player with new symbol
-//             player->x = x;
-//             player->y = y;
-//             player->symbol = generate_random_symbol();
-//             grid->cells[x][y] = player->symbol;
-//             break; // Exit the loop once a valid spot is found
-//         }
-//     }
+        if (grid->cells[x][y] == '.') { // if its gold
+            // Place new player with new symbol
+            player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
+            players[26] = new_player; // add the player to the player arraay
+            *num_players +=1; // increment the number of players
+            break; // Exit the loop once a valid spot is found
+        }
+    }
+}
+
+
+
+void grid_spawn_spectator(spectator_t* spectator) {
+    static spectator_t* current_spectator = NULL;
+   // if there is already a spectator kick them off
+   if(current_spectator != NULL){
+        spectator_quit( current_spectator);
+    }
+
+    current_spectator = new_spectator;
+}
+
+
+// void grid_send_state(player_t* player) {
+    // }
+    
+// void grid_send_state_spectator(spectator_t* spectator) {
 // }
 
 
-// void grid_spawn_spectator(spectator_t* spectator) {
-//    // if there is already a spectator kick them off
-//    if(spectator != NULL){
-//     spectator_quit();
-//     }
-// }
 
 
+void grid_game_over(grid_t* grid, player_t* players[], int num_players) {
+    // Iterate over each player
+    printf("Game Over\n");
+    for (int i = 0; i < num_players; i++) {
+        int purse = player_getpurse();
+        int name = player_getname();
 
-
-
-
-// // void grid_send_state(player_t* player) {
-// // }
-// // void grid_send_state_spectator(spectator_t* spectator) {
-// // }
-
-
-
-
-
-
-// void grid_game_over(grid_t* grid, player_t* players[], int num_players) {
-//     // Iterate over each player
-//     printf("Game Over\n");
-//     for (int i = 0; i < num_players; i++) {
-//         // Calculate the final score and create a summary containing purse contents, score, and name
-//         printf("Player %c - Score: %d, Nuggets: %d\n", players[i]->symbol, players[i]->nuggets * 100, players[i]->nuggets);
-//     }
-//     grid_delete(grid);
-// }
+        // Calculate the final score and create a summary containing purse contents, score, and name
+        printf("Player %c - Score: %d, Nuggets: %d\n", name, players[i]->nuggets * 100, players[i]->nuggets);
+    }
+    grid_delete(grid);
+}
 
 
 int grid_getnrows(grid_t* grid) {
@@ -305,3 +306,5 @@ char** grid_getcells(grid_t* grid) {
 int** grid_getnuggets(grid_t* grid) {
     return grid->nuggets;
 }
+
+
