@@ -10,34 +10,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-//#include <mem.h>
 #include <string.h>
 
 
-typedef struct {
-   char** cells; // initialize 2D array for cell rowns and columns
-   int** nuggets; // initialize 2D array for nugget counts based on positon
+typedef struct grid {
+   char** cells;
+   int** nuggets;
    int* rows;
    int* columns;
 } grid_t;
 
 
 grid_t* grid_load(FILE* file) {
-    // Create and initialize the grid
-    grid_t* grid = (grid_t*)malloc(sizeof(grid_t)); // Allocate memory for the grid structure
-
-    // Check if memory allocation was successful
+    grid_t* grid = (grid_t*)malloc(sizeof(grid_t));
     if (grid == NULL) {
         printf("Memory allocation failed.\n");
         exit(EXIT_FAILURE);
     }
-
-    // Allocate memory for rows and columns
     grid->rows = (int*)malloc(sizeof(int));
     grid->columns = (int*)malloc(sizeof(int));
     if (grid->rows == NULL || grid->columns == NULL) {
         printf("Memory allocation for rows or columns failed.\n");
-        free(grid); // Cleanup previously allocated grid before returning
+        free(grid);
         exit(EXIT_FAILURE);
     }
 
@@ -46,10 +40,10 @@ grid_t* grid_load(FILE* file) {
     grid->cells = NULL;
     grid->nuggets = NULL;
 
-    int rows = 0;       // Initialize the number of rows
-    int cols = 0;       // Initialize the number of columns
-    int max_cols = 0;   // Initialize the maximum number of columns encountered in the file
-    char c;             // Variable to read characters from the file
+    int rows = 0;
+    int cols = 0;
+    int max_cols = 0;
+    char c;
 
     // Iterate through the file to determine the number of rows and columns
     while ((c = fgetc(file)) != EOF) {
@@ -144,7 +138,6 @@ grid_t* grid_load(FILE* file) {
     }
 
 
-
     rewind(file);   // Reset file pointer to the beginning of the file
 
    // Read the map file line by line and parse each character to form the grid
@@ -153,7 +146,6 @@ grid_t* grid_load(FILE* file) {
     while ((c = fgetc(file)) != EOF && c != '\n') {
         if (j < *grid->columns) {
             grid->cells[i][j] = c;
-            printf("Debug: Loaded character '%c' into grid cell (%d, %d)\n", c, i, j);
             j++;
         }
     }
@@ -162,16 +154,8 @@ grid_t* grid_load(FILE* file) {
         grid->cells[i][j] = '.';
     }
 }
-
-    
-    // Print the values of rows and columns
-    printf("Grid rows: %d\n", *grid->rows);
-    printf("Grid columns: %d\n", *grid->columns);
-
     return grid;    // Return the grid structure
 }
-
-
 
 int grid_init_gold(grid_t* grid) {
     printf("Before placing gold: Rows = %d, Columns = %d\n", *grid->rows, *grid->columns);
@@ -226,7 +210,28 @@ int grid_init_gold(grid_t* grid) {
    return num_gold;
 }
 
+void grid_delete(grid_t* grid) {
+   // Deallocate memory associated with the game grid
+   for (int i = 0; i < *grid->rows; i++) {
+       free(grid->cells[i]);
+       grid->cells[i] = NULL;
+   }
+    free(grid->cells);
 
+
+    for (int i = 0; i < *grid->rows; i++) {
+       free(grid->nuggets[i]);
+        grid->nuggets[i] = NULL;
+   }
+    free(grid->nuggets);
+
+
+   free(grid->rows); // Free the allocated memory for rows
+   free(grid->columns); // Free the allocated memory for columns
+
+
+   free(grid);
+}
 
 
 // void grid_spawn_player(grid_t* grid, player_t* player) {
@@ -285,76 +290,18 @@ int grid_init_gold(grid_t* grid) {
 // }
 
 
-
-
-void grid_delete(grid_t* grid) {
-   // Deallocate memory associated with the game grid
-   for (int i = 0; i < *grid->rows; i++) {
-       free(grid->cells[i]);
-       grid->cells[i] = NULL;
-   }
-    free(grid->cells);
-
-
-    for (int i = 0; i < *grid->rows; i++) {
-       free(grid->nuggets[i]);
-        grid->nuggets[i] = NULL;
-   }
-    free(grid->nuggets);
-
-
-   free(grid->rows); // Free the allocated memory for rows
-    free(grid->columns); // Free the allocated memory for columns
-
-
-   free(grid);
-
-
+int grid_getnrows(grid_t* grid) {
+    return *grid->rows;
 }
 
+int grid_getncols(grid_t* grid) {
+    return *grid->columns;
+}
 
+char** grid_getcells(grid_t* grid) {
+    return grid->cells;
+}
 
-
-// /*********Helper Functions********/
-// // helps with differnt generation
-// char generate_random_symbol(player_t* players[], int num_players) {
-//     // Array of possible symbols
-//     char symbols[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
-//     // Get the number of symbols
-//     int num_symbols = sizeof(symbols) / sizeof(symbols[0]);
-  
-//     // Array to keep track of symbols already in use
-//     bool used_symbols[num_symbols];
-//     for (int i = 0; i < num_symbols; i++) {
-//         used_symbols[i] = false; // Initialize all symbols as not used
-//     }
-  
-//     // Mark symbols used by existing players
-//     for (int i = 0; i < num_players; i++) {
-//         char symbol = players[i]->symbol;
-//         if (symbol >= 'A' && symbol <= 'Z') { // Ensure the symbol is within range
-//             used_symbols[symbol - 'A'] = true; // Mark the symbol as used
-//         }
-//     }
-  
-//     // Generate a random index until finding an unused symbol
-//     int random_index = rand() % num_symbols;
-  
-//      while (used_symbols[random_index]) {
-//         random_index = rand() % num_symbols; // Generate a new random index
-//     }
-  
-//     // Return the symbol at the random index
-//     return symbols[random_index];
-// }
-
-
-void print_nugget_array(grid_t* grid) {
-   printf("Nugget Array:\n");
-   for (int i = 0; i < *grid->rows; i++) {
-       for (int j = 0; j < *grid->columns; j++) {
-           printf("%d ", grid->nuggets[i][j]); // Print the number of nuggets
-       }
-       printf("\n"); // New line at the end of each row
-   }
+int** grid_getnuggets(grid_t* grid) {
+    return grid->nuggets;
 }
