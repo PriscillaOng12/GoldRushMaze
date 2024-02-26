@@ -1,15 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-// Assuming grid_t is defined in "grid.h"
 #include "grid.h"
 #include "file.h"
-
-
-
-// Prototype for the grid_load function
-grid_t* grid_load(FILE* file);
 
 int main(int argc, char* argv[]) {
     // Check if a filename has been provided
@@ -35,9 +28,9 @@ int main(int argc, char* argv[]) {
 
 
     printf("Initial grid state:\n");
-    for (int i = 0; i < *(grid->rows); i++) {
-    for (int j = 0; j < *(grid->columns); j++) {
-        putchar(grid->cells[i][j]);
+    for (int i = 0; i < grid_getnrows(grid); i++) {
+    for (int j = 0; j < grid_getncols(grid); j++) {
+        putchar(grid_getcells(grid)[i][j]);
     }
     putchar('\n');
     }
@@ -45,26 +38,21 @@ int main(int argc, char* argv[]) {
   
     srand(time(NULL)); // Seed the random number generator once
     
-    printf("Before gold placed: rows: %d | columns: %d \n", *grid->rows, *grid->columns);
+    printf("Before gold placed: rows: %d | columns: %d \n", grid_getnrows(grid), grid_getncols(grid));
     int goldPlaced = grid_init_gold(grid); // Place gold in the grid
     printf("Gold placed: %d\n", goldPlaced); // Optional: print how many g
 
     printf("Grid state after placing gold:\n");
-    for (int i = 0; i < *grid->rows; i++) {
-        for (int j = 0; j < *grid->columns; j++) {
-            putchar(grid->cells[i][j]);
+    for (int i = 0; i < grid_getnrows(grid); i++) {
+        for (int j = 0; j < grid_getncols(grid); j++) {
+            putchar(grid_getcells(grid)[i][j]);
         }
         putchar('\n');
     }
 
-    printf("AT THE END: rows: %d | columns: %d \n", *grid->rows, *grid->columns);
+    printf("AT THE END: rows: %d | columns: %d \n", grid_getnrows(grid), grid_getncols(grid));
 
-
-    // for (int i = 0; i < grid->rows; i++) {
-    //     printf("%d: %s\n", i, grid->cells[i]);
-    // }
-
-    print_nugget_array(grid);
+    // print_nugget_array(grid);
 
     // Clean up and close the file
     

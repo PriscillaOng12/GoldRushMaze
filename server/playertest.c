@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
         }
         printf("\n");
     }
+    printf("----------------------------------------\n");
     player_moveto(player, 13, 13);
     player_update_visibility(player, grid);
     for (int i = 0; i < nr; i++) {
