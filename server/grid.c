@@ -18,6 +18,7 @@ typedef struct grid {
    int** nuggets;
    int* rows;
    int* columns;
+   int* playerCount;
 } grid_t;
 
 
