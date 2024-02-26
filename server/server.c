@@ -75,7 +75,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   //get first word from message
   char* firstWord;
   int firstSpace = 0;
-  while (!isspace(message[i])) {
+  while (!isspace(message[firstSpace])) {
     firstSpace++;
   }
   //amount of bytes needed for first word of message + 1 for null terminating
