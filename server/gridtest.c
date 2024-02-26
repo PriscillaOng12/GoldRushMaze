@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "grid.h"
-#include "file.h"
+#include "player.h"
 
 int main(int argc, char* argv[]) {
     // Check if a filename has been provided
@@ -34,7 +34,6 @@ int main(int argc, char* argv[]) {
     }
     putchar('\n');
     }
-
   
     srand(time(NULL)); // Seed the random number generator once
     
@@ -52,10 +51,24 @@ int main(int argc, char* argv[]) {
 
     printf("AT THE END: rows: %d | columns: %d \n", grid_getnrows(grid), grid_getncols(grid));
 
-    // print_nugget_array(grid);
+        // Test cases
+    printf("\n--- Starting Test Cases ---\n");
+    // Test spawning a player
+    printf("Testing spawning a player...\n");
+    grid_spawn_player(grid, &test_connection_info, test_real_name);
 
-    // Clean up and close the file
+    // Test spawning a spectator
+    printf("\nTesting spawning a spectator...\n");
+    grid_spawn_spectator(&test_spectator);
+
+    // Optionally, you can add more scenarios here to test other functionalities
+
+    // Test game quit scenario
+    printf("\nTesting game quit scenario...\n");
+    grid_game_over(grid, grid->players, *grid->num_players);
+
     
+     // Clean up and close the file
     grid_delete(grid);
     fclose(file);
     printf("its over.\n");
