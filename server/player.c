@@ -59,39 +59,74 @@ void player_update_visibility(player_t* player, grid_t* grid)
     int cx_ceil;
     int cy_floor;
     int cy_ceil;
-    bool flag = false;
-    if (map[x][y] != '.') {
-        for (int i = 0; i < grid_getnrows(grid); i++) {
-            for (int j = 0; j < grid_getncols(grid); j++) {
-                if (player->visibility[i][j] == 1) {
-                    player_set_visibility(player, i, j, 2);
-                }
+    for (int i = 0; i < grid_getnrows(grid); i++) {
+        for (int j = 0; j < grid_getncols(grid); j++) {
+            if (player->visibility[i][j] == 1) {
+                player_set_visibility(player, i, j, 2); // set previously visible squares from "active" to "seen"
             }
         }
-        if (map[x][y] == "#") {
+    }
+    if (map[x][y] != '.') {
+        if (map[x][y] == '#') {
             int count = 0;
-            for (int dx = -1; dx <= 1; dx = dx + 2) {
-                for (int dy = -1; dy <= 1; dy = dy + 2) {
-                    if (map[x+dx][y+dy] == "#") {
+                for (int dx = -1; dx <= 1; dx = dx + 2) {
+                    if (map[x+dx][y] == '#') {
                         count += 1;
                     }
                 }
-            }
+                for (int dy = -1; dy <= 1; dy = dy + 2) {
+                    if (map[x][y+dy] == '#') {
+                        count += 1;
+                    }
+                }
             if (count == 1) {
-                flag = true;
+                for (int i = 0; i < grid_getnrows(grid); i++) {
+                    for (int j = 0; j < grid_getncols(grid); j++) {
+                        bool visible = true;
+                        if (map[i][j] == '#') {
+                            visible = (abs(x-i) + abs(y-j) <= 1); // only adjacent hashes are shown
+                        }
+                        else {
+                            for (int dx = min(x, i) + 1; dx < max(x, i); dx++) {
+                                cy = y + (y - j) / (x - i) * (dx - x);
+                                cy_floor = floor(cy);
+                                cy_ceil = ceil(cy);
+                                if (map[dx][cy_floor] != '.' || map[dx][cy_ceil] != '.') {
+                                    visible = false;
+                                    break;
+                                }
+                            }
+                            for (int dy = min(y, j) + 1; dy < max(y, j); dy++) {
+                                cx = x + (x - i) / (y - j) * (dy - y);
+                                cx_floor = floor(cx);
+                                cx_ceil = ceil(cx);
+                                if (map[cx_floor][dy] != '.' || map[cx_ceil][dy] != '.') {
+                                    visible = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (visible) {
+                            player_set_visibility(player, i, j, 1);
+                        }
+                    }
+                }
             } else {
-                // VISIBILITY IS JUST THE STUFF OUTSIDE.
+                for (int dx = -1; dx <= 1; dx = dx + 2) {
+                    if (map[x+dx][y] == '#') {
+                        player_set_visibility(player, x+dx, y, 1);
+                    }
+                }
+                for (int dy = -1; dy <= 1; dy = dy + 2) {
+                    if (map[x][y+dy] == '#') {
+                        player_set_visibility(player, x, y + dy, 1);
+                    }
+                }
             }
         }
     } else {
-        flag = true; // TODO: THIS IS A DIFFERENT ALGO, NOT THE STANDARD ONE. FIX!
-    }
-    if (flag == true) {
         for (int i = 0; i < grid_getnrows(grid); i++) {
             for (int j = 0; j < grid_getncols(grid); j++) {
-                if (player->visibility[i][j] == 1) {
-                    player_set_visibility(player, i, j, 2);
-                }
                 bool visible = true;
                 for (int dx = min(x, i) + 1; dx < max(x, i); dx++) {
                     cy = y + (y - j) / (x - i) * (dx - x);

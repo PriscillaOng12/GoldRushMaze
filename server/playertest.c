@@ -5,6 +5,8 @@
 #include "player.h"
 #include "file.h"
 
+static void printchar(char c);
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         printf("Usage: %s <filename>\n", argv[0]);
@@ -33,7 +35,17 @@ int main(int argc, char* argv[]) {
     char** map = grid_getcells(grid);
     for (int i = 0; i < nr; i++) {
         for (int j = 0; j < nc; j++) {
-            printf("%c", (res[i][j] > 0 ? map[i][j] : ' '));
+            if (i == player_get_x(player) && j == player_get_y(player)) {
+                printf("@");
+            } else {
+                if (res[i][j] == 0) {
+                    printf(" ");
+                } else if (res[i][j] == 1) {
+                    printchar(map[i][j]);
+                } else {
+                    printf("%c", map[i][j]);
+                }
+            }
         }
         printf("\n");
     }
@@ -42,7 +54,55 @@ int main(int argc, char* argv[]) {
     player_update_visibility(player, grid);
     for (int i = 0; i < nr; i++) {
         for (int j = 0; j < nc; j++) {
-            printf("%c", (res[i][j] > 0 ? map[i][j] : ' '));
+            if (i == player_get_x(player) && j == player_get_y(player)) {
+                printf("@");
+            } else {
+                if (res[i][j] == 0) {
+                    printf(" ");
+                } else if (res[i][j] == 1) {
+                    printchar(map[i][j]);
+                } else {
+                    printf("%c", map[i][j]);
+                }
+            }
+        }
+        printf("\n");
+    }
+    printf("----------------------------------------\n");
+    player_moveto(player, 16, 39);
+    player_update_visibility(player, grid);
+    for (int i = 0; i < nr; i++) {
+        for (int j = 0; j < nc; j++) {
+            if (i == player_get_x(player) && j == player_get_y(player)) {
+                printf("@");
+            } else {
+                if (res[i][j] == 0) {
+                    printf(" ");
+                } else if (res[i][j] == 1) {
+                    printchar(map[i][j]);
+                } else {
+                    printf("%c", map[i][j]);
+                }
+            }
+        }
+        printf("\n");
+    }
+        printf("----------------------------------------\n");
+    player_moveto(player, 16, 40);
+    player_update_visibility(player, grid);
+    for (int i = 0; i < nr; i++) {
+        for (int j = 0; j < nc; j++) {
+            if (i == player_get_x(player) && j == player_get_y(player)) {
+                printf("@");
+            } else {
+                if (res[i][j] == 0) {
+                    printf(" ");
+                } else if (res[i][j] == 1) {
+                    printchar(map[i][j]);
+                } else {
+                    printf("%c", map[i][j]);
+                }
+            }
         }
         printf("\n");
     }
@@ -50,4 +110,10 @@ int main(int argc, char* argv[]) {
     grid_delete(grid);
     fclose(file);
     return EXIT_SUCCESS;
+}
+
+static void printchar(char c) {
+    printf("\e[0;31m");
+    printf("%c", c);
+    printf("\e[0m");
 }
