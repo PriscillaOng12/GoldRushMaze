@@ -14,6 +14,7 @@
 #include "player.h"
 #include "spectator.h"
 #include "mem.h"
+#include "message.h"
 
 
 typedef struct grid {
@@ -278,8 +279,37 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
 // }
 
 
-// void grid_send_state(player_t* player) {
-    // int ** visibility = player_get_visibility(player);
+ void grid_send_state(player_t* player) {
+
+    for (int j = 0; j < *num_players; j++) {
+            if (i == j){
+                continue;
+            }
+            player_t* other_player = player[j];
+
+            int** other_visibility = player_get_visibility(other_player);
+            if (other_visibility[y][x] = 1){
+
+            }
+        
+    }
+
+
+    for(int i=0; i< *num_players; i++){
+        player_t* player = player[i];
+        int** visibility = player_get_visibility(player);
+
+         
+
+        
+       // message_send(const addr_t to, const char* message);
+    }
+
+
+ }
+    
+    // how do we know what other visbiltity, like how do we know if other players are int eh visibility
+
     
 // }
     
