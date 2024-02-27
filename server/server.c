@@ -6,13 +6,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "./support/log.h"
-#include "./support/message.h"
-#include "./server/file.h"
-#include "./server/grid.h"
-#include "./server/player.h"
+#include "../support/log.h"
+#include "../support/message.h"
+#include "file.h"
+#include "grid.h"
+#include "player.h"
 
-static bool parseArgs(const int argc, char* argv[]);
+static bool parseArgs(const int argc, const char** argv);
 static bool handleMessage(void* arg, const addr_t from, const char* message);
 
 int main(const int argc, const char** argv) {
@@ -49,7 +49,7 @@ int main(const int argc, const char** argv) {
   return 0;
 }
 
-static bool parseArgs(const int argc, char* argv[]) {
+static bool parseArgs(const int argc, const char** argv) { //CHANGE IMPLEMENTATION
 
   //validate there are 2 or 3 args
   if (argc > 3 || argc < 2) {
@@ -108,6 +108,9 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
 
   //if first word is PLAY
   if (strcmp(firstWord, "PLAY") == 0) {
+    if (playerCount == MaxPlayers) {
+      message_send(from, "QUIT Game is full: no more players can join.");
+    }
     //get real_name, i.e. rest of message
     char* real_name = malloc(strlen(message) - firstSpace - 1);
     strcopy(real_name, message[firstSpace + 1]);
@@ -117,8 +120,8 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       return false;
     }
     //truncate to MaxNameLength and replace characters that are both isgraph() and isblank()
-    char* real_name_truncated = malloc(51);
-    strncpy(real_name_truncated, real_name, 50);
+    char* real_name_truncated = malloc(MaxNameLength + 1);
+    strncpy(real_name_truncated, real_name, MaxNameLength);
     real_name_truncated[50] = '\0';
     for (int i = 0; i < strlen(real_name_truncated); i++) {
       if (isgraph(real_name_truncated[i] && isblank(real_name_truncated[i]))) {
@@ -243,8 +246,9 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       free(messageToSend);
 
       //send DISPLAY message
-      grid_send_state(grid_getspectator(gameGrid)); //THIS METHOD MUST BE MADE
+      grid_send_state_spectator(grid_getspectator(gameGrid)); //THIS METHOD MUST BE MADE
       return false;
     }
   }
+  return false;
 }
