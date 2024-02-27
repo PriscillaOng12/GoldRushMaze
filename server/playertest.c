@@ -6,6 +6,8 @@
 #include "file.h"
 
 static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player);
+static void print_map(char** map, int nr, int nc);
+static void print_res(int** map, int nr, int nc);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -34,6 +36,7 @@ int main(int argc, char* argv[]) {
     player_update_visibility(player, grid);
     int** res =  player_get_visibility(player);
     char** map = grid_getcells(grid);
+    print_map(map, nr, nc);
     print_curr_state(res, map, nr, nc, player);
     int int1;
     int int2;
@@ -66,4 +69,15 @@ static void print_curr_state(int** res, char** map, int nr, int nc, player_t* pl
         printf("\n");
     }
     printf("-------------------------------------------------------------------\n");
+}
+
+static void print_map(char** map, int nr, int nc) {
+    for (int i = 0; i < nr; i++) {
+        for (int j = 0; j < nc; j++) {
+            printf("%c", map[i][j]);
+        }
+        printf("\n");
+    }
+    printf("-------------------------------------------------------------------\n");
+    printf("Info: (%d, %d)\n", nr ,nc);
 }

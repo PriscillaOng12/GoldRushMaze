@@ -71,13 +71,17 @@ void player_update_visibility(player_t* player, grid_t* grid)
         if (map[x][y] == '#') {
             int count = 0;
                 for (int dx = -1; dx <= 1; dx = dx + 2) {
-                    if (map[x+dx][y] == '#') {
-                        count++;
+                    if (0 <= x+dx && x+dx < grid_getnrows(grid)) {
+                        if (map[x+dx][y] == '#') {
+                            count++;
+                        }
                     }
                 }
                 for (int dy = -1; dy <= 1; dy = dy + 2) {
-                    if (map[x][y+dy] == '#') {
-                        count++;
+                    if (0 <= y+dy && y+dy < grid_getncols(grid)) {
+                        if (map[x][y+dy] == '#') {
+                            count++;
+                        }
                     }
                 }
             if (count == 1) {
@@ -114,13 +118,17 @@ void player_update_visibility(player_t* player, grid_t* grid)
                 }
             } else {
                 for (int dx = -1; dx <= 1; dx = dx + 2) {
-                    if (map[x+dx][y] == '#') {
-                        player_set_visibility(player, x+dx, y, 1);
+                    if (0 <= x+dx && x+dx < grid_getnrows(grid)) {
+                        if (map[x+dx][y] == '#') {
+                            player_set_visibility(player, x+dx, y, 1);
+                        }
                     }
                 }
                 for (int dy = -1; dy <= 1; dy = dy + 2) {
-                    if (map[x][y+dy] == '#') {
-                        player_set_visibility(player, x, y + dy, 1);
+                    if (0 <= y+dy && y+dy < grid_getncols(grid)) {
+                        if (map[x][y+dy] == '#') {
+                            player_set_visibility(player, x, y + dy, 1);
+                        }
                     }
                 }
             }
@@ -132,11 +140,8 @@ void player_update_visibility(player_t* player, grid_t* grid)
                 for (int dx = min(x, i) + 1; dx < max(x, i); dx++) {
                     cy = y + ((float)(y - j)) / ((float)(x - i)) * (dx - x);
                     cy_floor = floor(cy);
-                    cy_ceil = ceil(cy); // TODO: FIX BEHAVIOR WHEN SEEING WALL
+                    cy_ceil = ceil(cy);
                     if (map[dx][cy_floor] != '.' && map[dx][cy_ceil] != '.') {
-                        if (i == 12 && j < 28) {
-                            printf("(%d, %d): Visibility blocked by (%d, %f)\n", i, j, dx, cy);
-                        }
                         visible = false;
                         break;
                     }
@@ -146,9 +151,6 @@ void player_update_visibility(player_t* player, grid_t* grid)
                     cx_floor = floor(cx);
                     cx_ceil = ceil(cx);
                     if (map[cx_floor][dy] != '.' && map[cx_ceil][dy] != '.') {
-                        if (i == 12 && j < 28) {
-                            printf("(%d, %d): Visibility blocked by (%f, %d) \n", i, j, cx, dy);
-                        }
                         visible = false;
                         break;
                     }
