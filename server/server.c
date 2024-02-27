@@ -28,19 +28,21 @@ int main(const int argc, const char** argv) {
   }
 
   //FIGURE OUT HOW TO GET ADDRESS INFORMATION
-  char* serverHost;
-  char* serverPort;
+  char* serverHost = "127.0.0.1";
+  char* serverPort = "8080";
   addr_t* server;
   if (!message_setAddr(serverHost, serverPort, &server)) {
     fprintf(stderr, "can't form address from %s %s\n", serverHost, serverPort);
     return 4; // bad hostname/port
   }
 
-
-  FILE* fp = fopen(argv[1], "r");
+  char* mapPath = malloc(strlen(argv[2]) + 9);
+  strcpy(mapPath, "../maps/");
+  strcat(mapPath, argv[1]);
+  FILE* fp = fopen(mapPath, "r");
   grid_t* gameGrid = grid_load(fp);
 
-  message_loop(&server, 0, NULL, NULL, handleMessage);
+  message_loop(&gameGrid, 0, NULL, NULL, handleMessage);
 
   message_done();
   
@@ -90,6 +92,8 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   int MaxNameLength = 50;
   int MaxPlayers = 26;
   grid_t* gameGrid = arg;
+  player_t** playerList = grid_getplayers(gameGrid); //THIS METHOD MUST BE MADE
+  int playerCount = grid_getplayercount(gameGrid); //THIS METHOD MUST BE MADE
 
   //get first word from message
   char* firstWord;
@@ -104,7 +108,6 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
 
   //if first word is PLAY
   if (strcmp(firstWord, "PLAY") == 0) {
-    player_t** playerList = grid_getplayers(gameGrid); //ADD THIS METHOD
     //get real_name, i.e. rest of message
     char* real_name = malloc(strlen(message) - firstSpace - 1);
     strcopy(real_name, message[firstSpace + 1]);
@@ -122,12 +125,126 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
         real_name_truncated[i] = '_';
       }
     }
-    grid_spawn_player(gameGrid, from, real_name_truncated);
     
+    //spawns players
+    grid_spawn_player(gameGrid, &from, real_name_truncated);
+    //send OK message with player symbol
+    char playerCharacter = (char)(playerCount + 1);
+    char* messageToSend = malloc(4);
+    strcpy(messageToSend, "OK ");
+    strcat(messageToSend, playerCharacter);
+    message_send(from, messageToSend);
+    free(messageToSend);
 
+    //send initial GRID message with grid information
+    char* nrows;
+    sprintf(nrows, "%d", grid_getnrows(gameGrid));
+    char* ncols;
+    sprintf(ncols, "%d", grid_getncols(gameGrid));
+    char* messageToSend = malloc(5 + strlen(nrows) + 1 + strlen(ncols) + 1);
+    strcpy(messageToSend, "GRID ");
+    strcat(messageToSend, nrows);
+    strcat(messageToSend, " ");
+    strcat(messageToSend, ncols);
+    strcat(messageToSend, '\0');
+    message_send(from, messageToSend);
+    free(messageToSend);
 
+    //send initial GOLD message
+    char* remainingGold;
+    sprintf(remainingGold, "%d", grid_getnuggetcount(gameGrid));
+    char* messageToSend = malloc(9 + strlen(remainingGold) + 1);
+    strcpy(messageToSend, "GOLD 0 0 ");
+    strcat(messageToSend, remainingGold);
+    strcat(messageToSend, '\0'); //DO I NEED TO DO THIS>>??????
+    message_send(from, messageToSend);
+    free(messageToSend);
 
+    //send DISPLAY message
+    grid_send_state(playerList[playerCount - 1]); //WILL THIS WORK???
+    return false;
   }
+  else if (strcmp(firstWord, "KEY") == 0) {
+    //find matching player in list of players to find out which player to move
+    player_t* matchingPlayer = NULL;
+    for (int i = 0; i < playerCount; i++) {
+      const addr_t playerAddr = *player_get_addr(playerList[i]); //WILL THIS WORK?????
+      if (message_eqAddr(from, playerAddr)) {
+        matchingPlayer = playerList[i];
+        break;
+      }
+    }
+    
+    char* keyStroke;
+    strcpy(keyStroke, message[4]);
+    if (strcmp(keyStroke, "h") == 0) {
+      player_moveto(matchingPlayer, -1, 0);
+    }
+    else if (strcmp(keyStroke, "l") == 0) {
+      player_moveto(matchingPlayer, 1, 0);
+    }
+    else if (strcmp(keyStroke, "j") == 0) {
+      player_moveto(matchingPlayer, 0, -1);
+    }
+    else if (strcmp(keyStroke, "k") == 0) {
+      player_moveto(matchingPlayer, 0, 1);
+    }
+    else if (strcmp(keyStroke, "y") == 0) {
+      player_moveto(matchingPlayer, -1, 1);
+    }
+    else if (strcmp(keyStroke, "u") == 0) {
+      player_moveto(matchingPlayer, 1, 1);
+    }
+    else if (strcmp(keyStroke, "b") == 0) {
+      player_moveto(matchingPlayer, -1, -1);
+    }
+    else if (strcmp(keyStroke, "n") == 0) {
+      player_moveto(matchingPlayer, 1, -1);
+    }
+    else if (strcmp(keyStroke, "Q") == 0) {
+      if (matchingPlayer == NULL) {
+        message_send(from, "QUIT Thanks for watching!");
+        return false;
+      }
+      message_send(from, "QUIT Thanks for playing!");
+      return false;
+    }
+    //if no more nuggets remaining, game over
+    if (grid_getnuggetcount(gameGrid) == 0) {
+      grid_game_over(gameGrid);
+      return true;
+    }
+    else if (strcmp(firstWord, "SPECTATE") == 0) {
+      //spawns spectator
+      grid_spawn_spectator(gameGrid, &from); //MAKE THIS
 
+      //send initial GRID message with grid information
+      char* nrows;
+      sprintf(nrows, "%d", grid_getnrows(gameGrid));
+      char* ncols;
+      sprintf(ncols, "%d", grid_getncols(gameGrid));
+      char* messageToSend = malloc(5 + strlen(nrows) + 1 + strlen(ncols) + 1);
+      strcpy(messageToSend, "GRID ");
+      strcat(messageToSend, nrows);
+      strcat(messageToSend, " ");
+      strcat(messageToSend, ncols);
+      strcat(messageToSend, '\0');
+      message_send(from, messageToSend);
+      free(messageToSend);
 
+      //send initial GOLD message
+      char* remainingGold;
+      sprintf(remainingGold, "%d", **grid_getnuggets(gameGrid));
+      char* messageToSend = malloc(9 + strlen(remainingGold) + 1);
+      strcpy(messageToSend, "GOLD 0 0 ");
+      strcat(messageToSend, remainingGold);
+      strcat(messageToSend, '\0'); //DO I NEED TO DO THIS>>??????
+      message_send(from, messageToSend);
+      free(messageToSend);
+
+      //send DISPLAY message
+      grid_send_state(grid_getspectator(gameGrid)); //THIS METHOD MUST BE MADE
+      return false;
+    }
+  }
 }
