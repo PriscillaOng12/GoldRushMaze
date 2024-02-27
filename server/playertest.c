@@ -5,8 +5,9 @@
 #include "player.h"
 #include "file.h"
 
-static void printchar(char c);
 static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player);
+static void print_map(char** map, int nr, int nc);
+static void print_res(int** map, int nr, int nc);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -32,30 +33,22 @@ int main(int argc, char* argv[]) {
     int nc = grid_getncols(grid);
 
     player_t* player = player_new(NULL, "tester", 13, 13, nr, nc);
-
     player_update_visibility(player, grid);
     int** res =  player_get_visibility(player);
     char** map = grid_getcells(grid);
+    print_map(map, nr, nc);
     print_curr_state(res, map, nr, nc, player);
-    player_moveto(player, 19, 30);
-    player_update_visibility(player, grid);
-    print_curr_state(res, map, nr, nc, player);
-    player_moveto(player, 16, 39);
-    player_update_visibility(player, grid);
-    print_curr_state(res, map, nr, nc, player);
-    player_moveto(player, 16, 40);
-    player_update_visibility(player, grid);
-    print_curr_state(res, map, nr, nc, player);
+    int int1;
+    int int2;
+    while (scanf("%d %d", &int1, &int2) == 2) {
+        player_moveto(player, int1, int2);
+        player_update_visibility(player, grid);
+        print_curr_state(res, map, nr, nc, player);
+    }
     player_delete(player, grid);
     grid_delete(grid);
     fclose(file);
     return EXIT_SUCCESS;
-}
-
-static void printchar(char c) {
-    printf("\e[0;31m");
-    printf("%c", c);
-    printf("\e[0m");
 }
 
 static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player) {
@@ -67,7 +60,7 @@ static void print_curr_state(int** res, char** map, int nr, int nc, player_t* pl
                 if (res[i][j] == 0) {
                     printf(" ");
                 } else if (res[i][j] == 1) {
-                    printchar(map[i][j]);
+                    printf("\e[0;31m%c\e[0m", map[i][j]);
                 } else {
                     printf("%c", map[i][j]);
                 }
@@ -76,4 +69,15 @@ static void print_curr_state(int** res, char** map, int nr, int nc, player_t* pl
         printf("\n");
     }
     printf("-------------------------------------------------------------------\n");
+}
+
+static void print_map(char** map, int nr, int nc) {
+    for (int i = 0; i < nr; i++) {
+        for (int j = 0; j < nc; j++) {
+            printf("%c", map[i][j]);
+        }
+        printf("\n");
+    }
+    printf("-------------------------------------------------------------------\n");
+    printf("Info: (%d, %d)\n", nr ,nc);
 }
