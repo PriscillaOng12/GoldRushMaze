@@ -270,7 +270,9 @@ void grid_spawn_spectator(spectator_t* spectator) {
 
 
 // void grid_send_state(player_t* player) {
-    // }
+    // int ** visibility = player_get_visibility(player);
+    
+// }
     
 // void grid_send_state_spectator(spectator_t* spectator) {
 // }
@@ -286,7 +288,7 @@ void grid_game_over(grid_t* grid, player_t* players[], int num_players) {
         int name = player_getname();
 
         // Calculate the final score and create a summary containing purse contents, score, and name
-        printf("Player %c - Score: %d, Nuggets: %d\n", name, players[i]->nuggets * 100, players[i]->nuggets);
+        printf("Player %c - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
     }
     grid_delete(grid);
 }

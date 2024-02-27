@@ -1,4 +1,8 @@
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include "player.h"
 
 typedef struct grid grid_t;
 
