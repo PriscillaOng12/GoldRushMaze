@@ -1,4 +1,8 @@
-#include "message.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+#include "player.h"
 
 typedef struct grid grid_t;
 typedef struct player player_t;

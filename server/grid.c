@@ -279,7 +279,9 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
 
 
 // void grid_send_state(player_t* player) {
-    // }
+    // int ** visibility = player_get_visibility(player);
+    
+// }
     
 // void grid_send_state_spectator(spectator_t* spectator) {
 // }
