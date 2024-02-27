@@ -14,7 +14,7 @@
 #include "grid.h"
 #include "message.h"
 
-int MaxNameLength = 50;   // max number of chars in playerName
+int MaxNameLength = 50;
 
 static int min(int a, int b);
 static int max(int a, int b);
@@ -59,39 +59,74 @@ void player_update_visibility(player_t* player, grid_t* grid)
     int cx_ceil;
     int cy_floor;
     int cy_ceil;
-    bool flag = false;
-    if (map[x][y] != '.') {
-        for (int i = 0; i < grid_getnrows(grid); i++) {
-            for (int j = 0; j < grid_getncols(grid); j++) {
-                if (player->visibility[i][j] == 1) {
-                    player_set_visibility(player, i, j, 2);
-                }
+    for (int i = 0; i < grid_getnrows(grid); i++) {
+        for (int j = 0; j < grid_getncols(grid); j++) {
+            if (player->visibility[i][j] == 1) {
+                player_set_visibility(player, i, j, 2); // set previously visible squares from "active" to "seen"
             }
         }
-        if (map[x][y] == "#") {
+    }
+    if (map[x][y] != '.') {
+        if (map[x][y] == '#') {
             int count = 0;
-            for (int dx = -1; dx <= 1; dx = dx + 2) {
+                for (int dx = -1; dx <= 1; dx = dx + 2) {
+                    if (map[x+dx][y] == '#') {
+                        count++;
+                    }
+                }
                 for (int dy = -1; dy <= 1; dy = dy + 2) {
-                    if (map[x+dx][y+dy] == "#") {
-                        count += 1;
+                    if (map[x][y+dy] == '#') {
+                        count++;
+                    }
+                }
+            if (count == 1) {
+                for (int i = 0; i < grid_getnrows(grid); i++) {
+                    for (int j = 0; j < grid_getncols(grid); j++) {
+                        bool visible = true;
+                        if (map[i][j] == '#') {
+                            visible = (abs(x-i) + abs(y-j) <= 1); // only adjacent hashes are shown
+                        }
+                        else {
+                            for (int dx = min(x, i) + 1; dx < max(x, i); dx++) {
+                                cy = y + (y - j) / (x - i) * (dx - x);
+                                cy_floor = floor(cy);
+                                cy_ceil = ceil(cy);
+                                if (map[dx][cy_floor] != '.' || map[dx][cy_ceil] != '.') {
+                                    visible = false;
+                                    break;
+                                }
+                            }
+                            for (int dy = min(y, j) + 1; dy < max(y, j); dy++) {
+                                cx = x + (x - i) / (y - j) * (dy - y);
+                                cx_floor = floor(cx);
+                                cx_ceil = ceil(cx);
+                                if (map[cx_floor][dy] != '.' || map[cx_ceil][dy] != '.') {
+                                    visible = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (visible) {
+                            player_set_visibility(player, i, j, 1);
+                        }
+                    }
+                }
+            } else {
+                for (int dx = -1; dx <= 1; dx = dx + 2) {
+                    if (map[x+dx][y] == '#') {
+                        player_set_visibility(player, x+dx, y, 1);
+                    }
+                }
+                for (int dy = -1; dy <= 1; dy = dy + 2) {
+                    if (map[x][y+dy] == '#') {
+                        player_set_visibility(player, x, y + dy, 1);
                     }
                 }
             }
-            if (count == 1) {
-                flag = true;
-            } else {
-                // VISIBILITY IS JUST THE STUFF OUTSIDE.
-            }
         }
     } else {
-        flag = true; // TODO: THIS IS A DIFFERENT ALGO, NOT THE STANDARD ONE. FIX!
-    }
-    if (flag == true) {
         for (int i = 0; i < grid_getnrows(grid); i++) {
             for (int j = 0; j < grid_getncols(grid); j++) {
-                if (player->visibility[i][j] == 1) {
-                    player_set_visibility(player, i, j, 2);
-                }
                 bool visible = true;
                 for (int dx = min(x, i) + 1; dx < max(x, i); dx++) {
                     cy = y + (y - j) / (x - i) * (dx - x);
@@ -139,7 +174,70 @@ void player_delete(player_t* player, grid_t* grid)
     free(player);
 }
 
-// getter functions
+
+void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)
+{
+    int** nuggets = grid_getnuggets(grid);
+    int gold_obtained = nuggets[gold_x][gold_y];
+    if (gold_obtained != 0) {
+        *player->purse = *player->purse + gold_obtained;
+        player_t** players = grid_getplayers(grid);
+        grid_setnuggets(grid, gold_x, gold_y, 0);
+        grid_setnuggetcount(grid, grid_getnuggetcount(grid) - 1);
+        int num_players = grid_getplayercount(grid);
+        for (int i = 0; i < num_players; i++) {
+            if (players[i] != NULL) {
+                char* message = malloc(sizeof(char) * 50); // GOLD N P R
+                sprintf(message, "GOLD %d %d %d", (players[i] == player ? gold_obtained : 0), *player->purse, grid_getnuggetcount(grid));
+                message_send(*player_get_addr(players[i]), message);
+                free(message);
+            }
+        }
+        if (grid_getnuggetcount(grid) == 0) {
+            // TODO: FLAG GAME OVER!!!
+        }
+    }
+}
+
+bool player_move(player_t* player, grid_t* grid, int dx, int dy)
+{
+    int x = *player->x;
+    int y = *player->y;
+    if (grid_getcells(grid)[x+dx][y+dy] == '.' || grid_getcells(grid)[x+dx][y+dy] == '#' ) {
+        player_t** players = grid_getplayers(grid);
+        for (int i = 0; i < grid_getplayercount(grid); i++) {
+            if (players[i] != NULL) {
+                if (player_get_x(players[i]) == x + dx && player_get_y(players[i]) == y + dy) {
+                    player_moveto(players[i], x, y);
+                    break;
+                }
+            }
+        }
+        player_moveto(player, x+dx, y+dy);
+        player_collect_gold(player, grid, x+dx, y+dy);
+        for (int i = 0; i < grid_getplayercount(grid); i++) {
+            if (players[i] != NULL) {
+                player_update_visibility(players[i], grid); // TODO: CHECK IF NEED TO CALL grid_send_state
+            }
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void player_quit(player_t* player, grid_t* grid)
+{
+    player_t** players = grid_getplayers(grid);
+    for (int i = 0; i < grid_getplayercount(grid); i++) {
+        if (players[i] == player) {
+            players[i] = NULL;
+            player_delete(player, grid);
+            break;
+        }
+    }
+}
+
 char* player_get_name(player_t* player)
 {
     return player->real_name;

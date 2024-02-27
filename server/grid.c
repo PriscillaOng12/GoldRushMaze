@@ -12,16 +12,18 @@
 #include <string.h>
 #include "grid.h"
 #include "player.h"
+#include "spectator.h"
+#include "mem.h"
 
 
 typedef struct grid {
    char** cells;
    int** nuggets;
-   player_t* players[26];
-   int* num_players;
+   player_t** players;
    int* rows;
    int* columns;
    int* playerCount;
+   int* nuggetCount;
 } grid_t;
 
 
@@ -33,14 +35,13 @@ grid_t* grid_load(FILE* file) {
     }
     grid->rows = (int*)malloc(sizeof(int));
     grid->columns = (int*)malloc(sizeof(int));
-    if (grid->rows == NULL || grid->columns == NULL) {
+
+    if (grid->rows == NULL || grid->columns == NULL) { // TODO: check after each; could leak if rows allocs but cols don't
         printf("Memory allocation for rows or columns failed.\n");
         free(grid);
         exit(EXIT_FAILURE);
     }
 
-    *grid->rows = 0;
-    *grid->columns = 0;
     grid->cells = NULL;
     grid->nuggets = NULL;
 
@@ -100,7 +101,6 @@ grid_t* grid_load(FILE* file) {
         }
     }
 
-
     // Allocate memory for the nugget counts
     grid->nuggets = (int**)calloc(*grid->rows, sizeof(int*));
     if (grid->nuggets == NULL) {
@@ -146,18 +146,21 @@ grid_t* grid_load(FILE* file) {
 
    // Read the map file line by line and parse each character to form the grid
     for (int i = 0; i < *grid->rows; i++) {
-    int j = 0;
-    while ((c = fgetc(file)) != EOF && c != '\n') {
-        if (j < *grid->columns) {
-            grid->cells[i][j] = c;
-            j++;
+        int j = 0;
+        while ((c = fgetc(file)) != EOF && c != '\n') {
+            if (j < *grid->columns) {
+                grid->cells[i][j] = c;
+                j++;
+            }
+        }
+        // Fill any remaining cells in the row with the default character if the row is shorter than max_cols
+        for (; j < *grid->columns; j++) {
+            grid->cells[i][j] = '.';
         }
     }
-    // Fill any remaining cells in the row with the default character if the row is shorter than max_cols
-    for (; j < *grid->columns; j++) {
-        grid->cells[i][j] = '.';
-    }
-}
+    grid->playerCount = (int*)malloc(sizeof(int)); // need to free this on error
+    grid->nuggetCount = (int*)malloc(sizeof(int)); // need to free this on error
+    grid->players = (player_t**) calloc(26, sizeof(player_t*)); // need to free this on error
     return grid;    // Return the grid structure
 }
 
@@ -208,6 +211,11 @@ int grid_init_gold(grid_t* grid) {
     printf("After placing gold: Rows = %d, Columns = %d\n", *grid->rows, *grid->columns);
 
    printf("Gold placement complete. Total gold piles placed: %d\n", gold_placed);
+   for (int i = 0; i < *grid->rows; i++) {
+       for (int j = 0; j < *grid->columns; j++) {
+            (*grid->nuggetCount)++;
+        }
+   }
    return num_gold;
 }
 
@@ -230,7 +238,9 @@ void grid_delete(grid_t* grid) {
 
    free(grid->rows); // Free the allocated memory for rows
    free(grid->columns); // Free the allocated memory for columns
-
+   free(grid->nuggetCount);
+   free(grid->playerCount);
+   free(grid->players);
 
    free(grid);
 }
@@ -249,8 +259,7 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
         if (grid->cells[x][y] == '.') { // if its gold
             // Place new player with new symbol
             player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
-            players[26] = new_player; // add the player to the player arraay
-            *num_players +=1; // increment the number of players
+            grid->players[*(grid->playerCount)++] = new_player; // add the player to the player arraay
             break; // Exit the loop once a valid spot is found
         }
     }
@@ -258,15 +267,15 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
 
 
 
-void grid_spawn_spectator(spectator_t* spectator) {
-    static spectator_t* current_spectator = NULL;
-   // if there is already a spectator kick them off
-   if(current_spectator != NULL){
-        spectator_quit( current_spectator);
-    }
+// void grid_spawn_spectator(spectator_t* spectator) {
+//     static spectator_t* current_spectator = NULL;
+//    // if there is already a spectator kick them off
+//    if(current_spectator != NULL){
+//         spectator_quit( current_spectator);
+//     }
 
-    current_spectator = new_spectator;
-}
+//     current_spectator = new_spectator;
+// }
 
 
 // void grid_send_state(player_t* player) {
@@ -280,15 +289,16 @@ void grid_spawn_spectator(spectator_t* spectator) {
 
 
 
-void grid_game_over(grid_t* grid, player_t* players[], int num_players) {
+void grid_game_over(grid_t* grid) {
     // Iterate over each player
+    // This needs to be as a message to each client
     printf("Game Over\n");
-    for (int i = 0; i < num_players; i++) {
-        int purse = player_getpurse();
-        int name = player_getname();
+    for (int i = 0; i < *grid->playerCount; i++) {
+        int purse = player_get_purse(grid->players[i]);
+        char* name = player_get_name(grid->players[i]);
 
         // Calculate the final score and create a summary containing purse contents, score, and name
-        printf("Player %c - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
+        printf("Player %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
     }
     grid_delete(grid);
 }
@@ -310,4 +320,23 @@ int** grid_getnuggets(grid_t* grid) {
     return grid->nuggets;
 }
 
+int grid_getnuggetcount(grid_t* grid) {
+    return *grid->nuggetCount;
+}
+
+int grid_getplayercount(grid_t* grid) {
+    return *grid->playerCount;
+}
+
+player_t** grid_getplayers(grid_t* grid) {
+    return grid->players;
+}
+
+void grid_setnuggets(grid_t* grid, int i, int j, int n) {
+    grid->nuggets[i][j] = n;
+}
+
+void grid_setnuggetcount(grid_t* grid, int count) {
+    *grid->nuggetCount = count;
+}
 

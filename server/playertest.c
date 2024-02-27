@@ -5,6 +5,9 @@
 #include "player.h"
 #include "file.h"
 
+static void printchar(char c);
+static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player);
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         printf("Usage: %s <filename>\n", argv[0]);
@@ -23,6 +26,8 @@ int main(int argc, char* argv[]) {
          printf("Failed to load grid.\n");
         return EXIT_FAILURE;
     }
+
+    grid_init_gold(grid);
     int nr = grid_getnrows(grid);
     int nc = grid_getncols(grid);
 
@@ -31,23 +36,44 @@ int main(int argc, char* argv[]) {
     player_update_visibility(player, grid);
     int** res =  player_get_visibility(player);
     char** map = grid_getcells(grid);
-    for (int i = 0; i < nr; i++) {
-        for (int j = 0; j < nc; j++) {
-            printf("%c", (res[i][j] > 0 ? map[i][j] : ' '));
-        }
-        printf("\n");
-    }
-    printf("----------------------------------------\n");
+    print_curr_state(res, map, nr, nc, player);
     player_moveto(player, 19, 30);
     player_update_visibility(player, grid);
-    for (int i = 0; i < nr; i++) {
-        for (int j = 0; j < nc; j++) {
-            printf("%c", (res[i][j] > 0 ? map[i][j] : ' '));
-        }
-        printf("\n");
-    }
+    print_curr_state(res, map, nr, nc, player);
+    player_moveto(player, 16, 39);
+    player_update_visibility(player, grid);
+    print_curr_state(res, map, nr, nc, player);
+    player_moveto(player, 16, 40);
+    player_update_visibility(player, grid);
+    print_curr_state(res, map, nr, nc, player);
     player_delete(player, grid);
     grid_delete(grid);
     fclose(file);
     return EXIT_SUCCESS;
+}
+
+static void printchar(char c) {
+    printf("\e[0;31m");
+    printf("%c", c);
+    printf("\e[0m");
+}
+
+static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player) {
+    for (int i = 0; i < nr; i++) {
+        for (int j = 0; j < nc; j++) {
+            if (i == player_get_x(player) && j == player_get_y(player)) {
+                printf("@");
+            } else {
+                if (res[i][j] == 0) {
+                    printf(" ");
+                } else if (res[i][j] == 1) {
+                    printchar(map[i][j]);
+                } else {
+                    printf("%c", map[i][j]);
+                }
+            }
+        }
+        printf("\n");
+    }
+    printf("-------------------------------------------------------------------\n");
 }
