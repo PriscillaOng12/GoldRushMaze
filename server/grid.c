@@ -12,9 +12,9 @@
 #include <string.h>
 #include "grid.h"
 #include "player.h"
+#include "spectator.h"
 #include "mem.h"
 
-typedef struct player player_t;
 
 typedef struct grid {
    char** cells;
