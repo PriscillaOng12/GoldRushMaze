@@ -122,11 +122,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
         real_name_truncated[i] = '_';
       }
     }
-    grid_spawn_player(gameGrid, from, real_name_truncated);
-    
-
-
-
+    grid_spawn_player(gameGrid, &from, real_name_truncated);
   }
 
 

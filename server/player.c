@@ -12,6 +12,7 @@
 #include <math.h>
 #include "player.h"
 #include "grid.h"
+#include "mem.h"
 #include "message.h"
 
 int MaxNameLength = 50;
@@ -30,18 +31,18 @@ typedef struct player {
 
 player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)
 {
-    player_t* player = (player_t*) malloc(sizeof(player_t));
-    char* copied_name = (char*) malloc(sizeof(char) * (MaxNameLength + 1)); // truncate is handled by message processing
+    player_t* player = (player_t*) mem_assert(malloc(sizeof(player_t)), "Error allocating memory for player\n");
+    char* copied_name = (char*) mem_assert(malloc(sizeof(char) * (MaxNameLength + 1)), "Error allocating memory for copied_name\n"); // truncate is handled by message processing
     strcpy(copied_name, real_name); // grid is allowed to free "REAL NAME" once sent
     player->real_name = copied_name;
-    player->visibility = (int**) calloc(nrows, sizeof(int*));
+    player->visibility = (int**) mem_assert(calloc(nrows, sizeof(int*)), "Error allocating visibility array\n");
     for (int i=0; i<nrows; i++) {
-        player->visibility[i] = (int*) calloc(ncols, sizeof(int));
+        player->visibility[i] = (int*) mem_assert(calloc(ncols, sizeof(int)), "Error allocating row in visibility array\n");
     }
     player->connection_info = connection_info;
-    player->x = malloc(sizeof(int));
-    player->y = malloc(sizeof(int));
-    player->purse = malloc(sizeof(int));
+    player->x = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for x");
+    player->y = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for y");
+    player->purse = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for purse");
     *(player->x) = x;
     *(player->y) = y;
     *(player->purse) = 0;
@@ -187,7 +188,7 @@ void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)
         int num_players = grid_getplayercount(grid);
         for (int i = 0; i < num_players; i++) {
             if (players[i] != NULL) {
-                char* message = malloc(sizeof(char) * 50); // GOLD N P R
+                char* message = (char*) mem_assert(malloc(sizeof(char) * 50), "Error allocating memory for gold message string\n"); // GOLD N P R
                 sprintf(message, "GOLD %d %d %d", (players[i] == player ? gold_obtained : 0), *player->purse, grid_getnuggetcount(grid));
                 message_send(*player_get_addr(players[i]), message);
                 free(message);
