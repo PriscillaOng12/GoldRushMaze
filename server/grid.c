@@ -266,55 +266,110 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
     }
 }
 
+void grid_spawn_spectator(spectator_t* spectator) {
+    static spectator_t* current_spectator = NULL;
+   // if there is already a spectator kick them off
+   if(current_spectator != NULL){
+        spectator_quit( current_spectator);
+    }
+    current_spectator = new_spectator;
+}
 
 
-// void grid_spawn_spectator(spectator_t* spectator) {
-//     static spectator_t* current_spectator = NULL;
-//    // if there is already a spectator kick them off
-//    if(current_spectator != NULL){
-//         spectator_quit( current_spectator);
-//     }
+void grid_send_state(player_t* player) {
+    char[100] message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
+    int messageIndex = 0;// index to iterate through message string
+    int** visibility = player_get_visibility(player);
 
-//     current_spectator = new_spectator;
-// }
+     // every time you sstring copy over and then string copy a new line over 
+    for (int i = 0; i < *grid->rows; i++) {
+       for (int j = 0; j < *grid->columns; j++) {
 
-
- void grid_send_state(player_t* player) {
-
-    for (int j = 0; j < *num_players; j++) {
-            if (i == j){
-                continue;
+        // iterate through every cell in and add to visible grid in message string
+         if(visibility[i][j]= 1){
+            char cellContents = grid->cells[i][j]; 
+            
+            // check if this is another player, if so put itsconvert askii to letter
+            if(cellContents >64 && cellContents <=90){
+                cellContents = (char)cellValue;
             }
-            player_t* other_player = player[j];
 
-            int** other_visibility = player_get_visibility(other_player);
-            if (other_visibility[y][x] = 1){
-
+       // Check for nuggets or obstacles if no player is found
+            else if (grid->cells[i][j] == '#') {
+                cellContents = '#'; // wall
+            } else if (grid->cells[i][j] == '*') {
+                cellContents = '*'; // nugget
+            } else if (grid->cells[i][j] == '|') {
+                cellContents = '|'; // border
+            } else if (grid->cells[i][j] == '-') {
+                cellContents = '-'; // border
             }
-        
+            else if (grid->cells[i][j] == '.') {
+                cellContents = '.'; // border
+            }
+
+            // Add the cell content to the message
+           message[messageIndex++] = cellContents;
+
+            } 
+            else {
+                message[messageIndex++]= ' '; // Cell is not visible
+            }
+
+        }
+        message[messageIndex++] = '\n'; // New line at the end of each row
+    }
+    message[messageIndex] = '\0'; // Null-terminate the string
+
+    addr_t address = player_get_adress(player);
+    message_send(address, message);
+
+    free(message);
+}
+
+
+void grid_send_state_spectator(spectator_t* spectator) {
+    char[100] message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
+    int messageIndex = 0;// index to iterate through message string
+
+     // every time you sstring copy over and then string copy a new line over 
+    for (int i = 0; i < *grid->rows; i++) {
+       for (int j = 0; j < *grid->columns; j++) {
+        // iterate through every cell in and add to  grid in message string
+            char cellContents = grid->cells[i][j]; 
+            
+            // check if this is another player, if so put itsconvert askii to letter
+            if(cellContents >64 && cellContents <=90){
+                cellContents = (char)cellValue;
+            }
+
+       // Check for nuggets or obstacles if no player is found
+            else if (grid->cells[i][j] == '#') {
+                cellContents = '#'; // wall
+            } else if (grid->cells[i][j] == '*') {
+                cellContents = '*'; // nugget
+            } else if (grid->cells[i][j] == '|') {
+                cellContents = '|'; // border
+            } else if (grid->cells[i][j] == '-') {
+                cellContents = '-'; // border
+            }
+            else if (grid->cells[i][j] == '.') {
+                cellContents = '.'; // border
+            }
+
+            // Add the cell content to the message
+           message[messageIndex++] = cellContents;
+        }
+        message[messageIndex++] = '\n'; // New line at the end of each row
     }
 
+    message[messageIndex] = '\0'; // Null-terminate the string
 
-    for(int i=0; i< *num_players; i++){
-        player_t* player = player[i];
-        int** visibility = player_get_visibility(player);
+    addr_t address = spectator_get_adress(spectator);
+    message_send(address, message);
 
-         
-
-        
-       // message_send(const addr_t to, const char* message);
-    }
-
-
- }
-    
-    // how do we know what other visbiltity, like how do we know if other players are int eh visibility
-
-    
-// }
-    
-// void grid_send_state_spectator(spectator_t* spectator) {
-// }
+    free(message);
+}
 
 
 
