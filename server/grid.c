@@ -197,7 +197,6 @@ int grid_init_gold(grid_t* grid) {
 
 
        if (grid->cells[x][y] == '.') {
-           grid->cells[x][y] = '*'; // Gold symbol
            grid->nuggets[x][y] += 1; // increment nugget count
            gold_placed++;
            printf("Gold placed at (%d, %d). Total placed: %d\n", x, y, gold_placed);
@@ -247,24 +246,24 @@ void grid_delete(grid_t* grid) {
 }
 
 
-void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
-    // Calculate random spot on the grid
-    srand(time(NULL));
-    int x;
-    int y;
+// void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
+//     // Calculate random spot on the grid
+//     srand(time(NULL));
+//     int x;
+//     int y;
 
-   while (1) {
-        x = rand() % *grid->rows;
-        y = rand() % *grid->columns;
+//    while (1) {
+//         x = rand() % *grid->rows;
+//         y = rand() % *grid->columns;
       
-        if (grid->cells[x][y] == '.') { // if its gold
-            // Place new player with new symbol
-            player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
-            grid->players[*(grid->playerCount)++] = new_player; // add the player to the player arraay
-            break; // Exit the loop once a valid spot is found
-        }
-    }
-}
+//         if (grid->cells[x][y] == '.') { // if its gold
+//             // Place new player with new symbol
+//             player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
+//             grid->players[*(grid->playerCount)++] = new_player; // add the player to the player arraay
+//             break; // Exit the loop once a valid spot is found
+//         }
+//     }
+// }
 
 
 
@@ -279,34 +278,34 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
 // }
 
 
- void grid_send_state(player_t* player) {
+//  void grid_send_state(player_t* player) {
 
-    for (int j = 0; j < *num_players; j++) {
-            if (i == j){
-                continue;
-            }
-            player_t* other_player = player[j];
+//     for (int j = 0; j < *num_players; j++) {
+//             if (i == j){
+//                 continue;
+//             }
+//             player_t* other_player = player[j];
 
-            int** other_visibility = player_get_visibility(other_player);
-            if (other_visibility[y][x] = 1){
+//             int** other_visibility = player_get_visibility(other_player);
+//             if (other_visibility[y][x] = 1){
 
-            }
+//             }
         
-    }
+//     }
 
 
-    for(int i=0; i< *num_players; i++){
-        player_t* player = player[i];
-        int** visibility = player_get_visibility(player);
+//     for(int i=0; i< *num_players; i++){
+//         player_t* player = player[i];
+//         int** visibility = player_get_visibility(player);
 
          
 
         
-       // message_send(const addr_t to, const char* message);
-    }
+//        // message_send(const addr_t to, const char* message);
+//     }
 
 
- }
+//  }
     
     // how do we know what other visbiltity, like how do we know if other players are int eh visibility
 

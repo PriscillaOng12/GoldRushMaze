@@ -130,19 +130,25 @@ void player_update_visibility(player_t* player, grid_t* grid)
             for (int j = 0; j < grid_getncols(grid); j++) {
                 bool visible = true;
                 for (int dx = min(x, i) + 1; dx < max(x, i); dx++) {
-                    cy = y + (y - j) / (x - i) * (dx - x);
+                    cy = y + ((float)(y - j)) / ((float)(x - i)) * (dx - x);
                     cy_floor = floor(cy);
-                    cy_ceil = ceil(cy);
-                    if (map[dx][cy_floor] != '.' || map[dx][cy_ceil] != '.') {
+                    cy_ceil = ceil(cy); // TODO: FIX BEHAVIOR WHEN SEEING WALL
+                    if (map[dx][cy_floor] != '.' && map[dx][cy_ceil] != '.') {
+                        if (i == 12 && j < 28) {
+                            printf("(%d, %d): Visibility blocked by (%d, %f)\n", i, j, dx, cy);
+                        }
                         visible = false;
                         break;
                     }
                 }
                 for (int dy = min(y, j) + 1; dy < max(y, j); dy++) {
-                    cx = x + (x - i) / (y - j) * (dy - y);
+                    cx = x + ((float) (x - i)) / ((float)(y - j)) * (dy - y);
                     cx_floor = floor(cx);
                     cx_ceil = ceil(cx);
-                    if (map[cx_floor][dy] != '.' || map[cx_ceil][dy] != '.') {
+                    if (map[cx_floor][dy] != '.' && map[cx_ceil][dy] != '.') {
+                        if (i == 12 && j < 28) {
+                            printf("(%d, %d): Visibility blocked by (%f, %d) \n", i, j, cx, dy);
+                        }
                         visible = false;
                         break;
                     }
@@ -193,9 +199,6 @@ void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)
                 message_send(*player_get_addr(players[i]), message);
                 free(message);
             }
-        }
-        if (grid_getnuggetcount(grid) == 0) {
-            // TODO: FLAG GAME OVER!!!
         }
     }
 }
