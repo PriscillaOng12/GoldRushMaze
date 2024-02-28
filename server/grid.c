@@ -311,7 +311,10 @@ void grid_send_state(grid_t* grid, player_t* player) {
                     message_vis[i][j] = grid->cells[i][j];
                 }
                 *moving_ptr = message_vis[i][j];
-            } else if (visibility[i][j] == 2) {
+            } else if (visibility[i][j]= 1 && (message_vis[px][py] >= 65 && message_vis[px][py] <= 90)) {
+                *moving_ptr = message_vis[i][j];
+            }
+            else if (visibility[i][j] == 2) {
                 *moving_ptr = grid->cells[i][j];
             } else {
                 *moving_ptr = ' ';
@@ -325,7 +328,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
     *moving_ptr = '\0'; // Null-terminate the string
 
     addr_t* address = player_get_address(player);
-    message_send(address, message);
+    message_send(*address, message);
     for (int k = 0; k < grid_getnrows; k++) {
         free(message_vis[k]);
     }
