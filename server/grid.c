@@ -376,14 +376,13 @@ void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
 }
 
 
-
 void grid_game_over(grid_t* grid) {
-    char* message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
+    char* message = (char*)malloc((*grid->rows + 1)*(*grid->columns), sizeof(char*));
 
     for (int i = 0; i < *grid->playerCount; i++) {
         int purse = player_get_purse(grid->players[i]);
         char* name = player_get_name(grid->players[i]);
-        addr_t playerAddress = player_get_address(grid->players[i]);
+        addr_t playerAddress = player_get_addr(grid->players[i]);
 
         // Calculate the final score and create a summary containing purse contents, score, and name
         sprintf(message, "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
