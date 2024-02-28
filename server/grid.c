@@ -265,22 +265,13 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
     }
 }
 
-void grid_spawn_spectator(spectator_t* spectator) {
+void grid_spawn_spectator(grid_t* grid, spectator_t* spectator) {
     static spectator_t* current_spectator = NULL;
    // if there is already a spectator kick them off
    if(current_spectator != NULL){
-        spectator_quit( current_spectator);
+        spectator_quit(current_spectator, grid);
     }
-    current_spectator = new_spectator;
-}
-
-void grid_spawn_spectator(spectator_t* spectator) {
-    static spectator_t* current_spectator = NULL;
-   // if there is already a spectator kick them off
-   if(current_spectator != NULL){
-        spectator_quit( current_spectator);
-    }
-    current_spectator = new_spectator;
+    current_spectator = spectator;
 }
 
 void grid_send_state(grid_t* grid, player_t* player) {
@@ -325,7 +316,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
     *moving_ptr = '\0'; // Null-terminate the string
 
     addr_t* address = player_get_addr(player);
-    message_send(address, message);
+    message_send(*address, message);
     for (int k = 0; k < grid_getnrows; k++) {
         free(message_vis[k]);
     }
@@ -382,11 +373,11 @@ void grid_game_over(grid_t* grid) {
     for (int i = 0; i < *grid->playerCount; i++) {
         int purse = player_get_purse(grid->players[i]);
         char* name = player_get_name(grid->players[i]);
-        addr_t playerAddress = player_get_addr(grid->players[i]);
+        addr_t* playerAddress = player_get_addr(grid->players[i]);
 
         // Calculate the final score and create a summary containing purse contents, score, and name
         sprintf(message, "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
-        message_send(playerAddress, message);
+        message_send(*playerAddress, message);
     }
     grid_delete(grid);
 }
