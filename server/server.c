@@ -138,6 +138,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     char* messageToSend = malloc(4);
     strcpy(messageToSend, "OK ");
     strcat(messageToSend, &playerCharacter); //MAKING CHAR INTO CHAR*
+    messageToSend[playerCount] = '\0';
     message_send(from, messageToSend);
     free(messageToSend);
 
@@ -151,6 +152,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     strcat(messageToSend, nrows);
     strcat(messageToSend, " ");
     strcat(messageToSend, ncols);
+    messageToSend[5 + strlen(nrows) + 1 + strlen(ncols)] = '\0';
     message_send(from, messageToSend);
     free(messageToSend);
 
@@ -160,6 +162,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     messageToSend = realloc(messageToSend, 9 + strlen(remainingGold) + 1);
     strcpy(messageToSend, "GOLD 0 0 ");
     strcat(messageToSend, remainingGold);
+    messageToSend[9 + strlen(remainingGold)] = '\0';
     message_send(from, messageToSend);
     free(messageToSend);
 
@@ -232,6 +235,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       strcat(messageToSend, nrows);
       strcat(messageToSend, " ");
       strcat(messageToSend, ncols);
+      messageToSend[5 + strlen(nrows) + 1 + strlen(ncols)] = '\0';
       message_send(from, messageToSend);
       free(messageToSend);
       messageToSend = NULL;
@@ -242,6 +246,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       messageToSend = realloc(messageToSend, 9 + strlen(remainingGold) + 1);
       strcpy(messageToSend, "GOLD 0 0 ");
       strcat(messageToSend, remainingGold);
+      messageToSend[9 + strlen(remainingGold)] = '\0';
       message_send(from, messageToSend);
       free(messageToSend);
 
