@@ -7,7 +7,6 @@
 
 static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player);
 static void print_map(char** map, int nr, int nc);
-static void print_res(int** map, int nr, int nc);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
