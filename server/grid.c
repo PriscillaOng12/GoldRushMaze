@@ -246,24 +246,24 @@ void grid_delete(grid_t* grid) {
 }
 
 
-// void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
-//     // Calculate random spot on the grid
-//     srand(time(NULL));
-//     int x;
-//     int y;
+void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
+    // Calculate random spot on the grid
+    srand(time(NULL));
+    int x;
+    int y;
 
-//    while (1) {
-//         x = rand() % *grid->rows;
-//         y = rand() % *grid->columns;
+   while (1) {
+        x = rand() % *grid->rows;
+        y = rand() % *grid->columns;
       
-//         if (grid->cells[x][y] == '.') { // if its gold
-//             // Place new player with new symbol
-//             player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
-//             grid->players[*(grid->playerCount)++] = new_player; // add the player to the player arraay
-//             break; // Exit the loop once a valid spot is found
-//         }
-//     }
-// }
+        if (grid->cells[x][y] == '.') { // if its gold
+            // Place new player with new symbol
+            player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
+            grid->players[*(grid->playerCount)++] = new_player; // add the player to the player arraay
+            break; // Exit the loop once a valid spot is found
+        }
+    }
+}
 
 void grid_spawn_spectator(spectator_t* spectator) {
     static spectator_t* current_spectator = NULL;
@@ -389,18 +389,16 @@ void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
 
 
 
-
 void grid_game_over(grid_t* grid) {
-    char[500] message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
+   char* message = (char*)malloc((129) * sizeof(char*));
 
-    printf("Game Over\n");
     for (int i = 0; i < *grid->playerCount; i++) {
         int purse = player_get_purse(grid->players[i]);
         char* name = player_get_name(grid->players[i]);
         addr_t playerAddress = player_get_address(grid->players[i]);
 
         // Calculate the final score and create a summary containing purse contents, score, and name
-        snprintf(message, sizeof(message), "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
+        sprintf(message, "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
         message_send(playerAddress, message);
     }
     grid_delete(grid);
