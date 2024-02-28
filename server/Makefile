@@ -30,7 +30,7 @@ playertest: $(OBJECTS) playertest.o
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 server: server.o $(SOURCES) $(LIBS)
-	$(CC) $(CFLAGS) S^ $(LIBS) -o $@ -lm
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 # Clean target
 clean:
