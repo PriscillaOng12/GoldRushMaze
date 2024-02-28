@@ -14,7 +14,7 @@
 #include "player.h"
 #include "spectator.h"
 #include "mem.h"
-#include "message.h"
+#include "../support/message.h"
 
 
 typedef struct grid {
@@ -246,24 +246,24 @@ void grid_delete(grid_t* grid) {
 }
 
 
-// void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
-//     // Calculate random spot on the grid
-//     srand(time(NULL));
-//     int x;
-//     int y;
+void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
+    // Calculate random spot on the grid
+    srand(time(NULL));
+    int x;
+    int y;
 
-//    while (1) {
-//         x = rand() % *grid->rows;
-//         y = rand() % *grid->columns;
+   while (1) {
+        x = rand() % *grid->rows;
+        y = rand() % *grid->columns;
       
-//         if (grid->cells[x][y] == '.') { // if its gold
-//             // Place new player with new symbol
-//             player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
-//             grid->players[*(grid->playerCount)++] = new_player; // add the player to the player arraay
-//             break; // Exit the loop once a valid spot is found
-//         }
-//     }
-// }
+        if (grid->cells[x][y] == '.') { // if its gold
+            // Place new player with new symbol
+            player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
+            grid->players[*(grid->playerCount)++] = new_player; // add the player to the player arraay
+            break; // Exit the loop once a valid spot is found
+        }
+    }
+}
 
 // void grid_spawn_spectator(spectator_t* spectator) {
 //     static spectator_t* current_spectator = NULL;
@@ -284,7 +284,7 @@ void grid_delete(grid_t* grid) {
 // }
 
 void grid_send_state(grid_t* grid, player_t* player) {
-    char* message = (char*)malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*));
+    char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*));
     char* moving_ptr = message; // index to iterate through message string
     int** visibility = player_get_visibility(player);
     char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
@@ -311,10 +311,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
                     message_vis[i][j] = grid->cells[i][j];
                 }
                 *moving_ptr = message_vis[i][j];
-            } else if (visibility[i][j]= 1 && (message_vis[px][py] >= 65 && message_vis[px][py] <= 90)) {
-                *moving_ptr = message_vis[i][j];
-            }
-            else if (visibility[i][j] == 2) {
+            } else if (visibility[i][j] == 2) {
                 *moving_ptr = grid->cells[i][j];
             } else {
                 *moving_ptr = ' ';
@@ -337,8 +334,8 @@ void grid_send_state(grid_t* grid, player_t* player) {
 }
     
     
-// void grid_send_state_spectator(spectator_t* spectator) {
-//     char[500] message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
+// void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
+//     char* message = malloc((*grid->rows + 1)*(*grid->columns) * sizeof(char*));
 //     int messageIndex = 0;// index to iterate through message string
 
 //      // every time you sstring copy over and then string copy a new line over 
@@ -373,11 +370,10 @@ void grid_send_state(grid_t* grid, player_t* player) {
 //     }
 //       message[messageIndex] = '\0'; // Null-terminate the string
 
-//     addr_t address = spectator_get_adress(spectator);
+//     addr_t address = *spectator_get_addr(spectator);
 //     message_send(address, message);
 //     free(message);
 // }
-
 
 
 

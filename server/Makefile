@@ -3,7 +3,7 @@ CC = gcc
 # Compiler flags
 CFLAGS = -Wall -Wextra -std=c11 -I../support
 
-LIBS = ../support/support.a
+LIBS = ../support/log.c ../support/message.c
 # Source files
 SOURCES = file.c grid.c player.c mem.c
 GRIDTESTSRC = file.c grid.c player.c gridtest.c mem.c
@@ -23,10 +23,13 @@ gridtest.o: $(GRIDTESTSRC)
 
 playertest.o: $(PLAYERTESTSRC)
 # Compile executables
-gridtest: $(OBJECTS) $(LIBFILES) gridtest.o
+gridtest: $(OBJECTS) $(LIBS) gridtest.o
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 playertest: $(OBJECTS) playertest.o
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
+
+server: server.o $(SOURCES) $(LIBS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 # Clean target
