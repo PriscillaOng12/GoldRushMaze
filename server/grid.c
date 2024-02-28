@@ -334,7 +334,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
 }
     
     
-void grid_send_state_spectator(spectator_t* spectator) {
+void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
     char[500] message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
     int messageIndex = 0;// index to iterate through message string
 
