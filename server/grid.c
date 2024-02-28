@@ -389,8 +389,7 @@ void grid_game_over(grid_t* grid) {
         addr_t playerAddress = player_get_address(grid->players[i]);
 
         // Calculate the final score and create a summary containing purse contents, score, and name
-        printf("Player %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
-        
+        snprintf(message, sizeof(message), "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
         message_send(playerAddress, message);
     }
     grid_delete(grid);
