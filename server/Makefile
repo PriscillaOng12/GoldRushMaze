@@ -3,7 +3,7 @@ CC = gcc
 # Compiler flags
 CFLAGS = -Wall -Wextra -std=c11 -I../support
 
-LIBS = ../support/support.a
+LIBS = ../support/log.c ../support/message.c
 # Source files
 SOURCES = file.c grid.c player.c
 GRIDTESTSRC = file.c grid.c player.c gridtest.c
