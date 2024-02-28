@@ -14,7 +14,7 @@
 #include "player.h"
 #include "spectator.h"
 #include "mem.h"
-#include "message.h"
+#include "../support/message.h"
 
 
 typedef struct grid {
@@ -284,7 +284,7 @@ void grid_spawn_spectator(spectator_t* spectator) {
 }
 
 void grid_send_state(grid_t* grid, player_t* player) {
-    char* message = (char*)malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*));
+    char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*));
     char* moving_ptr = message; // index to iterate through message string
     int** visibility = player_get_visibility(player);
     char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
@@ -324,7 +324,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
 
     *moving_ptr = '\0'; // Null-terminate the string
 
-    addr_t* address = player_get_address(player);
+    addr_t* address = player_get_addr(player);
     message_send(address, message);
     for (int k = 0; k < grid_getnrows; k++) {
         free(message_vis[k]);
@@ -334,8 +334,8 @@ void grid_send_state(grid_t* grid, player_t* player) {
 }
     
     
-void grid_send_state_spectator(spectator_t* spectator) {
-    char[500] message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
+void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
+    char* message = malloc((*grid->rows + 1)*(*grid->columns) * sizeof(char*));
     int messageIndex = 0;// index to iterate through message string
 
      // every time you sstring copy over and then string copy a new line over 
@@ -370,7 +370,7 @@ void grid_send_state_spectator(spectator_t* spectator) {
     }
       message[messageIndex] = '\0'; // Null-terminate the string
 
-    addr_t address = spectator_get_adress(spectator);
+    addr_t address = *spectator_get_addr(spectator);
     message_send(address, message);
     free(message);
 }
