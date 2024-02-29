@@ -292,7 +292,6 @@ void grid_send_state(grid_t* grid, player_t* player) {
         }
     }
 
-     // every time you sstring copy over and then string copy a new line over 
     for (int i = 0; i < *grid->rows; i++) {
        for (int j = 0; j < *grid->columns; j++) {
             if (visibility[i][j] == 1 && (message_vis[px][py] < 65 || message_vis[px][py] > 90)) {
@@ -313,7 +312,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
         moving_ptr++;
     }
 
-    *moving_ptr = '\0'; // Null-terminate the string
+    *moving_ptr = '\0';
 
     addr_t* address = player_get_addr(player);
     message_send(*address, message);
@@ -326,42 +325,48 @@ void grid_send_state(grid_t* grid, player_t* player) {
     
     
 void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
-    char* message = malloc((*grid->rows + 1)*(*grid->columns) * sizeof(char*));
-    int messageIndex = 0;// index to iterate through message string
+    char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*));
+    char* moving_ptr = message; // index to iterate through message string
+    char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
+    int k;
+    for (k = 0; k < *grid->rows; k++) {
+        message_vis[k] = mem_assert(calloc(*grid->columns, sizeof(char*)), "Error allocating space for player message");
+    }
+    int px, py;
+    for (k = 0; k < *grid->playerCount; k++) {
+        if (grid->players[k] != NULL) {
+            px = player_get_x(grid->players[k]);
+            py = player_get_y(grid->players[k]);
+            message_vis[px][py] = (char) (65 + k);
+        }
+    }
 
-     // every time you sstring copy over and then string copy a new line over 
     for (int i = 0; i < *grid->rows; i++) {
        for (int j = 0; j < *grid->columns; j++) {
-        // iterate through every cell in and add to  grid in message string
-            char cellContents = grid->cells[i][j]; 
-            
-            // check if this is another player, if so put itsconvert askii to letter
-            if(cellContents >64 && cellContents <=90){
-                cellContents = (char)cellValue;
+            if ((message_vis[px][py] < 65 || message_vis[px][py] > 90)) {
+                if (grid->nuggets[i][j] > 0) {
+                    message_vis[i][j] = '*';
+                } else {
+                    message_vis[i][j] = grid->cells[i][j];
+                }
+                *moving_ptr = message_vis[i][j];
+            } else {
+                *moving_ptr = grid->cells[i][j];
             }
-
-       // Check for nuggets or obstacles if no player is found
-            else if (grid->cells[i][j] == '#') {
-                cellContents = '#'; // wall
-            } else if (grid->cells[i][j] == '*') {
-                cellContents = '*'; // nugget
-            } else if (grid->cells[i][j] == '|') {
-                cellContents = '|'; // border
-            } else if (grid->cells[i][j] == '-') {
-                cellContents = '-'; // border
-            }
-            else if (grid->cells[i][j] == '.') {
-                cellContents = '.'; // border
-            }
-
-            // Add the cell content to the message
-           message[messageIndex++] = cellContents;
+            moving_ptr++;
         }
-        message[messageIndex++] = '\n'; // New line at the end of each row
+        *moving_ptr = '\n';
+        moving_ptr++;
     }
-      message[messageIndex] = '\0'; // Null-terminate the string
-    addr_t address = *(spectator_get_addr(spectator));
-    message_send(address, message);
+
+    *moving_ptr = '\0';
+
+    addr_t* address = spectator_get_addr(spectator);
+    message_send(*address, message);
+    for (int k = 0; k < *grid->playerCount; k++) {
+        free(message_vis[k]);
+    }
+    free(message_vis);
     free(message);
 }
 
