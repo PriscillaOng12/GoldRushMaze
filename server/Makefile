@@ -29,7 +29,7 @@ gridtest: $(OBJECTS) $(LIBS) gridtest.o
 playertest: $(OBJECTS) playertest.o
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
-server: server.o $(SOURCES) $(LIBS)
+server: server.o $(OBJECTS) $(LIBS)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 # Clean target
