@@ -5,9 +5,9 @@ CFLAGS = -Wall -Wextra -std=c11 -I../support
 
 LIBS = ../support/log.c ../support/message.c
 # Source files
-SOURCES = file.c grid.c player.c mem.c
-GRIDTESTSRC = file.c grid.c player.c gridtest.c mem.c
-PLAYERTESTSRC = file.c grid.c player.c playertest.c mem.c
+SOURCES = file.c grid.c player.c mem.c spectator.c
+GRIDTESTSRC = file.c grid.c player.c spectator.c gridtest.c mem.c
+PLAYERTESTSRC = file.c grid.c player.c spectator.c playertest.c mem.c
 # Object files
 OBJECTS = $(SOURCES:.c=.o)
 # Executables

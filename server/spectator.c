@@ -20,6 +20,7 @@ typedef struct spectator {
 spectator_t* spectator_new(addr_t* connection_info)
 {
     spectator_t* spectator = (spectator_t*) malloc(sizeof(spectator_t));
+    spectator->connection_info = connection_info;
     return spectator;
 }
 
@@ -30,7 +31,7 @@ void spectator_delete(spectator_t* spectator)
 
 void spectator_quit(spectator_t* spectator, grid_t* grid)
 {
-    // grid_getspectator(); // TODO: SET NULL
+    
     spectator_delete(spectator);
 }
 

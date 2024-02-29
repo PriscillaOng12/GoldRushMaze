@@ -93,19 +93,19 @@ void player_update_visibility(player_t* player, grid_t* grid)
                         }
                         else {
                             for (int dx = min(x, i) + 1; dx < max(x, i); dx++) {
-                                cy = y + (y - j) / (x - i) * (dx - x);
+                                cy = y + ((float) (y - j)) / ((float) (x - i)) * (dx - x);
                                 cy_floor = floor(cy);
                                 cy_ceil = ceil(cy);
-                                if (map[dx][cy_floor] != '.' || map[dx][cy_ceil] != '.') {
+                                if (map[dx][cy_floor] != '.' && map[dx][cy_ceil] != '.') {
                                     visible = false;
                                     break;
                                 }
                             }
                             for (int dy = min(y, j) + 1; dy < max(y, j); dy++) {
-                                cx = x + (x - i) / (y - j) * (dy - y);
+                                cx = x + ((float) (x - i)) / ((float) (y - j)) * (dy - y);
                                 cx_floor = floor(cx);
                                 cx_ceil = ceil(cx);
-                                if (map[cx_floor][dy] != '.' || map[cx_ceil][dy] != '.') {
+                                if (map[cx_floor][dy] != '.' && map[cx_ceil][dy] != '.') {
                                     visible = false;
                                     break;
                                 }
