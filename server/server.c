@@ -167,7 +167,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     free(messageToSend);
 
     //send DISPLAY message
-    grid_send_state(playerList[playerCount - 1]); //WILL THIS WORK???
+    grid_send_state(gameGrid, playerList[playerCount - 1]); //WILL THIS WORK???
     return false;
   }
   else if (strcmp(firstWord, "KEY") == 0) {
@@ -251,7 +251,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       free(messageToSend);
 
       //send DISPLAY message
-      grid_send_state_spectator(grid_getspectator(gameGrid)); //THIS METHOD MUST BE MADE
+      grid_send_state_spectator(gameGrid, grid_getspectator(gameGrid)); //THIS METHOD MUST BE MADE
       return false;
     }
   }
