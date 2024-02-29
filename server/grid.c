@@ -265,23 +265,14 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
     }
 }
 
-// void grid_spawn_spectator(spectator_t* spectator) {
-//     static spectator_t* current_spectator = NULL;
-//    // if there is already a spectator kick them off
-//    if(current_spectator != NULL){
-//         spectator_quit( current_spectator);
-//     }
-//     current_spectator = new_spectator;
-// }
-
-// void grid_spawn_spectator(spectator_t* spectator) {
-//     static spectator_t* current_spectator = NULL;
-//    // if there is already a spectator kick them off
-//    if(current_spectator != NULL){
-//         spectator_quit( current_spectator);
-//     }
-//     current_spectator = new_spectator;
-// }
+void grid_spawn_spectator(grid_t* grid, spectator_t* spectator) {
+    static spectator_t* current_spectator = NULL;
+   // if there is already a spectator kick them off
+   if(current_spectator != NULL){
+        spectator_quit(current_spectator, grid);
+    }
+    current_spectator = spectator;
+}
 
 void grid_send_state(grid_t* grid, player_t* player) {
     char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*));
@@ -326,7 +317,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
 
     addr_t* address = player_get_addr(player);
     message_send(*address, message);
-    for (int k = 0; k < *grid->rows; k++) {
+    for (int k = 0; k < grid_getnrows; k++) {
         free(message_vis[k]);
     }
     free(message_vis);
@@ -370,28 +361,26 @@ void grid_send_state(grid_t* grid, player_t* player) {
 //     }
 //       message[messageIndex] = '\0'; // Null-terminate the string
 
-//     addr_t address = *spectator_get_addr(spectator);
-//     message_send(address, message);
-//     free(message);
-// }
+    addr_t address = *spectator_get_addr(spectator);
+    message_send(address, message);
+    free(message);
+}
 
 
+void grid_game_over(grid_t* grid) {
+    char* message = (char*)malloc(129 * sizeof(char));
 
-// void grid_game_over(grid_t* grid) {
-//     char[500] message = (char*)malloc((*grid->row + 1)*(*grid->columns), sizeof(char*));
+    for (int i = 0; i < *grid->playerCount; i++) {
+        int purse = player_get_purse(grid->players[i]);
+        char* name = player_get_name(grid->players[i]);
+        addr_t* playerAddress = player_get_addr(grid->players[i]);
 
-//     printf("Game Over\n");
-//     for (int i = 0; i < *grid->playerCount; i++) {
-//         int purse = player_get_purse(grid->players[i]);
-//         char* name = player_get_name(grid->players[i]);
-//         addr_t playerAddress = player_get_address(grid->players[i]);
-
-//         // Calculate the final score and create a summary containing purse contents, score, and name
-//         snprintf(message, sizeof(message), "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
-//         message_send(playerAddress, message);
-//     }
-//     grid_delete(grid);
-// }
+        // Calculate the final score and create a summary containing purse contents, score, and name
+        sprintf(message, "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
+        message_send(*playerAddress, message);
+    }
+    grid_delete(grid);
+}
 
 
 int grid_getnrows(grid_t* grid) {
