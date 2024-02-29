@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include "message.h"
 // #include "player.h"
 // #include "spectator.h"
 

@@ -295,7 +295,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
      // every time you sstring copy over and then string copy a new line over 
     for (int i = 0; i < *grid->rows; i++) {
        for (int j = 0; j < *grid->columns; j++) {
-            if (visibility[i][j]= 1 && (message_vis[px][py] < 65 || message_vis[px][py] > 90)) {
+            if (visibility[i][j] == 1 && (message_vis[px][py] < 65 || message_vis[px][py] > 90)) {
                 if (grid->nuggets[i][j] > 0) {
                     message_vis[i][j] = '*';
                 } else {
@@ -317,7 +317,7 @@ void grid_send_state(grid_t* grid, player_t* player) {
 
     addr_t* address = player_get_addr(player);
     message_send(*address, message);
-    for (int k = 0; k < grid_getnrows; k++) {
+    for (int k = 0; k < *grid->playerCount; k++) {
         free(message_vis[k]);
     }
     free(message_vis);
@@ -325,43 +325,42 @@ void grid_send_state(grid_t* grid, player_t* player) {
 }
     
     
-// void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
-//     char* message = malloc((*grid->rows + 1)*(*grid->columns) * sizeof(char*));
-//     int messageIndex = 0;// index to iterate through message string
+void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
+    char* message = malloc((*grid->rows + 1)*(*grid->columns) * sizeof(char*));
+    int messageIndex = 0;// index to iterate through message string
 
-//      // every time you sstring copy over and then string copy a new line over 
-//     for (int i = 0; i < *grid->rows; i++) {
-//        for (int j = 0; j < *grid->columns; j++) {
-//         // iterate through every cell in and add to  grid in message string
-//             char cellContents = grid->cells[i][j]; 
+     // every time you sstring copy over and then string copy a new line over 
+    for (int i = 0; i < *grid->rows; i++) {
+       for (int j = 0; j < *grid->columns; j++) {
+        // iterate through every cell in and add to  grid in message string
+            char cellContents = grid->cells[i][j]; 
             
-//             // check if this is another player, if so put itsconvert askii to letter
-//             if(cellContents >64 && cellContents <=90){
-//                 cellContents = (char)cellValue;
-//             }
+            // check if this is another player, if so put itsconvert askii to letter
+            if(cellContents >64 && cellContents <=90){
+                cellContents = (char)cellValue;
+            }
 
-//        // Check for nuggets or obstacles if no player is found
-//             else if (grid->cells[i][j] == '#') {
-//                 cellContents = '#'; // wall
-//             } else if (grid->cells[i][j] == '*') {
-//                 cellContents = '*'; // nugget
-//             } else if (grid->cells[i][j] == '|') {
-//                 cellContents = '|'; // border
-//             } else if (grid->cells[i][j] == '-') {
-//                 cellContents = '-'; // border
-//             }
-//             else if (grid->cells[i][j] == '.') {
-//                 cellContents = '.'; // border
-//             }
+       // Check for nuggets or obstacles if no player is found
+            else if (grid->cells[i][j] == '#') {
+                cellContents = '#'; // wall
+            } else if (grid->cells[i][j] == '*') {
+                cellContents = '*'; // nugget
+            } else if (grid->cells[i][j] == '|') {
+                cellContents = '|'; // border
+            } else if (grid->cells[i][j] == '-') {
+                cellContents = '-'; // border
+            }
+            else if (grid->cells[i][j] == '.') {
+                cellContents = '.'; // border
+            }
 
-//             // Add the cell content to the message
-//            message[messageIndex++] = cellContents;
-//         }
-//         message[messageIndex++] = '\n'; // New line at the end of each row
-//     }
-//       message[messageIndex] = '\0'; // Null-terminate the string
-
-    addr_t address = *spectator_get_addr(spectator);
+            // Add the cell content to the message
+           message[messageIndex++] = cellContents;
+        }
+        message[messageIndex++] = '\n'; // New line at the end of each row
+    }
+      message[messageIndex] = '\0'; // Null-terminate the string
+    addr_t address = *(spectator_get_addr(spectator));
     message_send(address, message);
     free(message);
 }
