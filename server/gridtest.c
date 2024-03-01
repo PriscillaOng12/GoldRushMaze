@@ -55,17 +55,22 @@ int main(int argc, char* argv[]) {
     printf("\n--- Starting Test Cases ---\n");
     // Test spawning a player
     printf("Testing spawning a player...\n");
-    grid_spawn_player(grid, &test_connection_info, test_real_name);
+    
+    addr_t* test_connection_info = {NULL};
+    char* testName = "player one"  ; 
+    spectator_t* test_spectator = {NULL};
+
+    grid_spawn_player(grid, test_connection_info, testName);
 
     // Test spawning a spectator
     printf("\nTesting spawning a spectator...\n");
-    grid_spawn_spectator(&test_spectator);
+    grid_spawn_spectator(grid, test_spectator);
 
     // Optionally, you can add more scenarios here to test other functionalities
 
     // Test game quit scenario
     printf("\nTesting game quit scenario...\n");
-    grid_game_over(grid, grid->players, *grid->num_players);
+    grid_game_over(grid);
 
     
      // Clean up and close the file
