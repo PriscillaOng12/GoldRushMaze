@@ -31,8 +31,8 @@ void spectator_delete(spectator_t* spectator)
 
 void spectator_quit(spectator_t* spectator, grid_t* grid)
 {
-    
     spectator_delete(spectator);
+    grid_setspectator(grid, NULL);
 }
 
 addr_t* spectator_get_addr(spectator_t* spectator)
