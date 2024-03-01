@@ -75,7 +75,8 @@ gridtest: $(OBJECTS) $(GRIDTESTOBJ) $(LIBS_O)
 playertest: $(OBJECTS) $(PLAYERTESTOBJ) $(LIBS_O)
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 
-# Add a rule for server if needed, following the pattern above
+server: server.o $(OBJECTS) $(LIBS)
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 # Clean target
 clean:
