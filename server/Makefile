@@ -75,7 +75,7 @@ gridtest: $(OBJECTS) $(GRIDTESTOBJ) $(LIBS_O)
 playertest: $(OBJECTS) $(PLAYERTESTOBJ) $(LIBS_O)
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 
-server: server.o $(OBJECTS) $(LIBS)
+server: server.o $(OBJECTS) $(LIBS) ../support/message.o ../support/log.o
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
 
 # Clean target
