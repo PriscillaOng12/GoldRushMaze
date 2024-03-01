@@ -1,14 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include "grid.h"
 #include "player.h"
 #include "file.h"
+#include "sys/types.h"
 
 static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player, grid_t* grid);
 static void print_map(char** map, int nr, int nc);
 
 int main(int argc, char* argv[]) {
+    srand(getpid());
     if (argc < 2) {
         printf("Usage: %s <filename>\n", argv[0]);
         return EXIT_FAILURE;
@@ -55,7 +58,7 @@ int main(int argc, char* argv[]) {
         player_update_visibility(player, grid);
         print_curr_state(res, map, nr, nc, player, grid);
     }
-    grid_delete(grid);
+    grid_game_over(grid);
     fclose(file);
     return EXIT_SUCCESS;
 }
