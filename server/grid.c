@@ -132,8 +132,6 @@ int grid_init_gold(grid_t* grid) {
     while (gold_placed < num_gold) {
         int x = rand() % *grid->rows;
         int y = rand() % *grid->columns;
-
-
         if (grid->cells[x][y] == '.') {
             grid->nuggets[x][y] += 1; // increment nugget count
             gold_placed++;
@@ -183,8 +181,6 @@ void grid_delete(grid_t* grid) {
 
 
 void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
-    // Calculate random spot on the grid
-    srand(time(NULL));
     int x;
     int y;
 
@@ -196,6 +192,7 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
             // ensure no existing player or gold there.
             // Place new player with new symbol
             player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
+            player_update_visibility(new_player, grid);
             grid->players[*grid->playerCount] = new_player; // add the player to the player arraay
             *grid->playerCount = *grid->playerCount + 1;
             break; // Exit the loop once a valid spot is found
