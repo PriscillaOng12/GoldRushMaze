@@ -38,7 +38,7 @@
 
 
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -I../support
+CFLAGS = -Wall -Wextra -std=c11 -I../support -ggdb
 
 # Libraries are compiled into object files, not included directly in the final link command
 LIBS_O = ../support/log.o ../support/message.o

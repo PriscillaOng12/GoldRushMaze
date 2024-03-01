@@ -44,7 +44,11 @@ int main(int argc, char* argv[]) {
     printf("Grid state after placing gold:\n");
     for (int i = 0; i < grid_getnrows(grid); i++) {
         for (int j = 0; j < grid_getncols(grid); j++) {
-            putchar(grid_getcells(grid)[i][j]);
+            if (grid_getnuggets(grid)[i][j] > 0) {
+                putchar('*');
+            } else {
+                putchar(grid_getcells(grid)[i][j]);
+            }
         }
         putchar('\n');
     }
@@ -58,8 +62,7 @@ int main(int argc, char* argv[]) {
     
     addr_t* test_connection_info = {NULL};
     char* testName = "player one"  ; 
-    spectator_t* test_spectator = {NULL};
-
+    spectator_t* test_spectator = spectator_new(test_connection_info);
     grid_spawn_player(grid, test_connection_info, testName);
 
     // Test spawning a spectator
@@ -71,10 +74,8 @@ int main(int argc, char* argv[]) {
     // Test game quit scenario
     printf("\nTesting game quit scenario...\n");
     grid_game_over(grid);
-
     
      // Clean up and close the file
-    grid_delete(grid);
     fclose(file);
     printf("its over.\n");
 

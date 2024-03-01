@@ -29,4 +29,7 @@ void grid_setnuggets(grid_t* grid, int i, int j, int n);
 void grid_setnuggetcount(grid_t* grid, int count);
 spectator_t* grid_getspectator(grid_t* grid);
 void grid_setspectator(grid_t* grid, spectator_t* spectator);
+int grid_getspectatorCount(grid_t* grid);
+void grid_setspectatorCount(grid_t* grid, int count);
+
 
