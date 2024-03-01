@@ -29,9 +29,9 @@ void spectator_delete(spectator_t* spectator)
     free(spectator);
 }
 
-void spectator_quit(spectator_t* spectator, grid_t* grid)
+void spectator_quit(spectator_t* spectator, grid_t* grid) // assumes spectator is actually there.
 {
-    
+    grid_setspectatorCount(grid, 0);
     spectator_delete(spectator);
 }
 

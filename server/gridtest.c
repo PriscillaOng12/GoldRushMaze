@@ -44,7 +44,11 @@ int main(int argc, char* argv[]) {
     printf("Grid state after placing gold:\n");
     for (int i = 0; i < grid_getnrows(grid); i++) {
         for (int j = 0; j < grid_getncols(grid); j++) {
-            putchar(grid_getcells(grid)[i][j]);
+            if (grid_getnuggets(grid)[i][j] > 0) {
+                putchar('*');
+            } else {
+                putchar(grid_getcells(grid)[i][j]);
+            }
         }
         putchar('\n');
     }
@@ -55,21 +59,23 @@ int main(int argc, char* argv[]) {
     printf("\n--- Starting Test Cases ---\n");
     // Test spawning a player
     printf("Testing spawning a player...\n");
-    grid_spawn_player(grid, &test_connection_info, test_real_name);
+    
+    addr_t* test_connection_info = {NULL};
+    char* testName = "player one"  ; 
+    spectator_t* test_spectator = spectator_new(test_connection_info);
+    grid_spawn_player(grid, test_connection_info, testName);
 
     // Test spawning a spectator
     printf("\nTesting spawning a spectator...\n");
-    grid_spawn_spectator(&test_spectator);
+    grid_spawn_spectator(grid, test_spectator);
 
     // Optionally, you can add more scenarios here to test other functionalities
 
     // Test game quit scenario
     printf("\nTesting game quit scenario...\n");
-    grid_game_over(grid, grid->players, *grid->num_players);
-
+    grid_game_over(grid);
     
      // Clean up and close the file
-    grid_delete(grid);
     fclose(file);
     printf("its over.\n");
 

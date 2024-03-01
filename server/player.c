@@ -198,7 +198,11 @@ void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)
             if (players[i] != NULL) {
                 char* message = (char*) mem_assert(malloc(sizeof(char) * 50), "Error allocating memory for gold message string\n"); // GOLD N P R
                 sprintf(message, "GOLD %d %d %d", (players[i] == player ? gold_obtained : 0), *player->purse, grid_getnuggetcount(grid));
-                message_send(*player_get_addr(players[i]), message);
+                if (player_get_addr((players[i])) != NULL) {
+                    message_send(*player_get_addr(players[i]), message);
+                } else {
+                    printf("Message: %s\n", message);
+                }
                 free(message);
             }
         }
@@ -209,25 +213,30 @@ bool player_move(player_t* player, grid_t* grid, int dx, int dy)
 {
     int x = *player->x;
     int y = *player->y;
-    if (grid_getcells(grid)[x+dx][y+dy] == '.' || grid_getcells(grid)[x+dx][y+dy] == '#' ) {
-        player_t** players = grid_getplayers(grid);
-        for (int i = 0; i < grid_getplayercount(grid); i++) {
-            if (players[i] != NULL) {
-                if (player_get_x(players[i]) == x + dx && player_get_y(players[i]) == y + dy) {
-                    player_moveto(players[i], x, y);
-                    break;
+    if (0 <= x+dx && x+dx < grid_getnrows(grid) && 0 <= y+dy && y+dy < grid_getncols(grid)) {
+        if (grid_getcells(grid)[x+dx][y+dy] == '.' || grid_getcells(grid)[x+dx][y+dy] == '#' ) {
+            player_t** players = grid_getplayers(grid);
+            for (int i = 0; i < grid_getplayercount(grid); i++) {
+                if (players[i] != NULL) {
+                    if (player_get_x(players[i]) == x + dx && player_get_y(players[i]) == y + dy) {
+                        player_moveto(players[i], x, y);
+                        break;
+                    }
                 }
             }
-        }
-        player_moveto(player, x+dx, y+dy);
-        player_collect_gold(player, grid, x+dx, y+dy);
-        for (int i = 0; i < grid_getplayercount(grid); i++) {
-            if (players[i] != NULL) {
-                player_update_visibility(players[i], grid); // TODO: CHECK IF NEED TO CALL grid_send_state
+            player_moveto(player, x+dx, y+dy);
+            player_collect_gold(player, grid, x+dx, y+dy);
+            for (int i = 0; i < grid_getplayercount(grid); i++) {
+                if (players[i] != NULL) {
+                    player_update_visibility(players[i], grid);
+                }
             }
+            return true;
+        } else {
+            return false;
         }
-        return true;
-    } else {
+    }
+    else {
         return false;
     }
 }
@@ -236,10 +245,12 @@ void player_quit(player_t* player, grid_t* grid)
 {
     player_t** players = grid_getplayers(grid);
     for (int i = 0; i < grid_getplayercount(grid); i++) {
-        if (players[i] == player) {
-            players[i] = NULL;
-            player_delete(player, grid);
-            break;
+        if (players[i] != NULL) {
+            if (players[i] == player) {
+                players[i] = NULL;
+                player_delete(player, grid);
+                break;
+            }
         }
     }
 }
