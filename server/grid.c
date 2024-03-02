@@ -210,8 +210,9 @@ void grid_spawn_spectator(grid_t* grid, spectator_t* spectator) {
 }
 
 void grid_send_state(grid_t* grid, player_t* player) {
-    char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*));
-    char* moving_ptr = message; // index to iterate through message string
+    char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char*));
+    strcpy(message, "DISPLAY\n");
+    char* moving_ptr = message + 8; // index to iterate through message string
     int** visibility = player_get_visibility(player);
     char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
     int k;
@@ -331,11 +332,18 @@ void grid_game_over(grid_t* grid) {
     for (int i = 0; i < *grid->playerCount; i++) {
         int purse = player_get_purse(grid->players[i]);
         char* name = player_get_name(grid->players[i]);
-        addr_t* playerAddress = player_get_addr(grid->players[i]);
         // Calculate the final score and create a summary containing purse contents, score, and name
-        sprintf(message, "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
-        if (playerAddress != NULL) {
-            message_send(*playerAddress, message);
+        sprintf(buffer, "Player %c | Score: %.3d | Name: %s\n", 65+i, purse, name);
+        strcat(message, buffer);
+    }
+    for (int i = 0; i < *grid->playerCount; i++) {
+        if (player_get_isactive(grid_getplayers(grid)[i])) {
+            addr_t* playerAddress = player_get_addr(grid->players[i]);
+            if (playerAddress != NULL) {
+                message_send(*playerAddress, message);
+            } else {
+                // printf("%s\n", message);
+            }
         }
     }
     grid_delete(grid);
