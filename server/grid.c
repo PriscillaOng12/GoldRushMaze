@@ -3,7 +3,7 @@
 *
 * see grid.h for more information.
 *
-* Eliana Stanford, Winter 2024
+* Ctrl ZZZ, Winter 2024
 */
 
 #include <stdio.h>
