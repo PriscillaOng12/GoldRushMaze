@@ -232,6 +232,8 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
 
 `void grid_send_state_spectator(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
 
+`void grid_delete(grid_t* grid)`: Frees the grid and allocated memory/resources required for it. 
+
 `void grid_game_over(grid_t* grid)`: Handles the end of the game by preparing a summary and cleaning up.
 
 ** Getter functions included as helper functions to faciliatate easy integration. 
@@ -264,7 +266,7 @@ If player is already in spot
 	Create a message about current game state
 	Send the message to the specified player client.
 	
-#### `void grid_send_spectator_state(grid_t* grid, spectator_t* spectator)`:
+#### `void grid_send_state_spectator(grid_t* grid, spectator_t* spectator)`:
 	Create a message about current game state
 	Send the message to the specified spectator client.
 
