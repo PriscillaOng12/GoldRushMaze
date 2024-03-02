@@ -1,6 +1,4 @@
-
-
-/**
+/* 
  *
  * This file provides the client side for the Nuggets project in CS50.
  * The client is launched by the user providing hostname and port to connect to the server (see DESIGN.md).
@@ -21,50 +19,38 @@
 #include <string.h>
 #include <unistd.h>
 #include <ncurses.h>
-#include <ctype.h>
-#include <stdbool.h>
-#include <math.h>
 #include <time.h>
-#include "../libcs50/mem.h"
-#include "../libcs50/file.h"
-#include "../support/message.h"
-#include "../support/log.h"
+#include "message.h"
 
 /**************** global types ****************/
-typedef struct localclient {
+typedef struct data {
   // size of board, initialized to initial window size
   int NROWS;
   int NCOLS;
   char player; //if non-zero, prepresents player's letter inbetween display frames
-} localclient_t;
+} data_t;
 
-/**************** local function  ****************/
-// Functions for game communication handling
+// internal function prototypes
 static bool handleMessage(void* arg, const addr_t from, const char* message);
 static bool handleInput(void* arg);
-static void initialize_curses(); 
-static void setupWindow();
+static void initialize_curses(); // CURSES
+static void init_map();
 static void display_map(char* display);
 static void display_temp_message(const char* temp);
 static void clear_temp_message();
 
-// Functions for handling specific types of messages
-static bool gameOk(const char* message);
-static bool gameGrid(const char* message);
-static bool gameGold(const char* message);
-static void gameDisplay(const char* message);
+// handleMessage helpers
+static bool handleOK(const char* message);
+static bool handleGRID(const char* message);
+static bool handleGOLD(const char* message);
+static void handleDISPLAY(const char* message);
 
 // game helper function
-static localclient_t* data_new();
+static data_t* data_new();
 
-static localclient_t* data;
+static data_t* data;
 
-/* ***************************
- *  main function
- *  Accepts either 2 or 3 arguments from command-line: hostname port [playername]
- *  client interacts with server to play the nugget game by sending keystrokes.
- *  Usage described in DESIGN.md
- */
+/************** main **************/
 int main(int argc, char *argv[])
 {
   
@@ -89,7 +75,7 @@ int main(int argc, char *argv[])
 
   /* initialize messages module */
   // (without logging)
-  if (message_init(stderr) == 0) {
+  if (message_init(NULL) == 0) {
     free(data);
     exit(3); // failure to initialize message module
   }
@@ -118,9 +104,9 @@ int main(int argc, char *argv[])
     // connect as spectator
     message_send(server, "SPECTATE");
     // no ok message is sent, auto-initialize
-    if(!gameOk(NULL)) {
+    if(!handleOK(NULL)) {
       // send quit message
-      message_send(server, "KEY Q"); 
+      message_send(server, "KEY Q");
       message_done();
       free(data);
       exit(6);
@@ -145,10 +131,6 @@ int main(int argc, char *argv[])
 }
 
 /**************** handleInput ****************/
-/* stdin has input ready; read a char and send it to the server.
- * Return true if the message loop should exit, otherwise false.
- * i.e., return true if EOF was encountered on stdin, or fatal error.
- */
 static bool
 handleInput(void* arg)
 {
@@ -182,10 +164,6 @@ handleInput(void* arg)
 }
 
 /**************** handleMessage ****************/
-/* Datagram received; print it.
- * We ignore 'arg' here.
- * Return true if any fatal error.
- */
 static bool
 handleMessage(void* arg, const addr_t from, const char* message)
 {
@@ -196,7 +174,7 @@ handleMessage(void* arg, const addr_t from, const char* message)
 
   // Find the position of the header within the message
   if (strncmp(message, "OK ", strlen("OK ")) == 0){
-    if(!gameOk(message)) {
+    if(!handleOK(message)) {
       // send quit message
       message_send(from, "KEY Q");
       message_done();
@@ -205,7 +183,7 @@ handleMessage(void* arg, const addr_t from, const char* message)
     }
 
   } else if (strncmp(message, "GRID ", strlen("GRID ")) == 0) {
-    if(!gameGrid(message)) {
+    if(!handleGRID(message)) {
       // send quit message
       message_send(from, "KEY Q");
       message_done();
@@ -217,12 +195,12 @@ handleMessage(void* arg, const addr_t from, const char* message)
     return false;
 
   } else if (strncmp(message, "GOLD ", strlen("GOLD ")) == 0) {
-    gameGold(message);
+    handleGOLD(message);
 
     return false;
 
   } else if (strncmp(message, "DISPLAY\n", strlen("DISPLAY\n")) == 0) {
-    gameDisplay(message);
+    handleDISPLAY(message);
 
     return false;
 
@@ -250,10 +228,9 @@ handleMessage(void* arg, const addr_t from, const char* message)
   return false;
 }
 
-/**************** gameOk ****************/
-/* fills player arg in data with char sent by server or 0 otherwise */
+/**************** handleOK ****************/
 static bool
-gameOk(const char* message)
+handleOK(const char* message)
 {
   data->player = 0;
   if (message != NULL) {
@@ -263,17 +240,13 @@ gameOk(const char* message)
   }
   /* initialize curses library */
   initialize_curses(); // CURSES
-  setupWindow(); // initialize with blank map
+  init_map(); // initialize with blank map
   return true;
 }
 
-/**************** gameGrid ****************/
-/* takes a char* as an argument, of the GRID message type.                          */
-/* GRID message must be in *exact* syntax as described in requirments.              */
-/* verifies that CURSES window is at least the required size (specified by message) */
-/* "The display shall consist of NR+1 rows and NC columns" */
+/**************** handleGRID ****************/
 static bool
-gameGrid(const char* message)
+handleGRID(const char* message)
 {
   int nrows;
   int ncols;
@@ -302,13 +275,9 @@ gameGrid(const char* message)
   return true;
 }
 
-/**************** gameGold ****************/
-/* takes a char* as an argument, of the GOLD message type.             */
-/* GOLD message must be in *exact* syntax as described in requirments. */
-/* displays gold values in the topline of CURSES window                */
-/* if the display line is longer than the window, it is cropped.       */
+/**************** handleGOLD ****************/
 static bool
-gameGold(const char* message)
+handleGOLD(const char* message)
 {
   // ints to store gold information to display in curse
   int gold_collected;
@@ -352,12 +321,9 @@ gameGold(const char* message)
   }
 }
 
-/**************** gameDisplay ****************/
-/* takes a char* as an argument, of the DISPLAY message type.             */
-/* DISPLAY message must be in *exact* syntax as described in requirments. */
-/* displays the chars following '\n' character in CURSES.                 */
+/**************** handleDISPLAY ****************/
 static void
-gameDisplay(const char* message)
+handleDISPLAY(const char* message)
 {
   /* get display contents */
   size_t headerLength = strlen("DISPLAY\n");
@@ -372,7 +338,6 @@ gameDisplay(const char* message)
 }
 
 /* ************ initialize_curses *********************** */
-/* initialize curses // CURSES everywhere in this function */
 static void
 initialize_curses()
 {
@@ -394,7 +359,6 @@ initialize_curses()
 }
 
 /* ************ display_map *********************** */
-/* Display the map (char* display) into CURSES screen */
 static void
 display_map(char* display)
 {
@@ -414,7 +378,6 @@ display_map(char* display)
 }
 
 /* ************ clear_temp_message ************* */
-/* clears temp string after gold status message   */
 static void
 clear_temp_message()
 {
@@ -443,7 +406,6 @@ clear_temp_message()
 }
 
 /* ************ display_temp_message ************* */
-/* display temp string after gold status message   */
 static void
 display_temp_message(const char* temp)
 {
@@ -469,10 +431,9 @@ display_temp_message(const char* temp)
   refresh();
 }
 
-/* ************ setupWindow *********************** */
-/* fills ncurses screen with bank character ' '  */
+/* ************ init_map *********************** */
 static void
-setupWindow()
+init_map()
 {
   // blank map
   int max_nrows = 0;
@@ -488,12 +449,11 @@ setupWindow()
 }
 
 /* ************ data_new *********** */
-/* allocates memory for data struct  */
-static localclient_t*
+static data_t*
 data_new()
 {
   // allocate memory for array of pointers
-  localclient_t* data = malloc(sizeof(localclient_t));
+  data_t* data = malloc(sizeof(data_t));
   if (data == NULL) {
       exit(3);
   }
