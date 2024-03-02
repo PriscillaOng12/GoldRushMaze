@@ -293,21 +293,23 @@ A module that handles the player's data: their name, position, purse, and the ce
 
 ### Functional decomposition
 
-`player_t* player_new(char* name, char* conn_info, int x, int y)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
+`player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
 
-`void player_move(player_t* player, int dx, int dy) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
+`bool player_move(player_t* player, grid_t* grid, int dx, int dy) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
 
-`void player_collect_gold(player_t* player, int gold_x, int gold_y)`: Updates the player's purse and the location of the gold piles, and sends a `GOLD` message to all clients with updated locations.
+`void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)`: Updates the player's purse and the location of the gold piles, and sends a `GOLD` message to all clients with updated locations.
 
-`void player_update_visibility(player_t* player)`: Updates the player's visibility layer. Called by `player_move`.
+`void player_update_visibility(player_t* player, grid_t* grid)`: Updates the player's visibility layer. Called by `player_move`.
 
-`void player_quit(player_t* player, grid_t* grid)`: Called by grid module when a player quits. Gracefully handles quit, then calls `player_delete`.
+`void player_quit(player_t* player)`: Called by grid module when a player quits. Gracefully handles quit, then calls `player_delete`.
 
-`player_delete(player_t* player)`: Deallocates memory associated with the player.
+`player_delete(player_t* player, grid_t* grid)`: Deallocates memory associated with the player.
+
+** Getter and setter functions included as helper functions to faciliatate easy integration. 
 
 ### Pseudo code for logic/algorithmic flow
 
-#### `player_t* player_new(char* name, char* conn_info, int x, int y)`
+#### `player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`
 Trivial constructor for a new player.
 
 #### `void player_move(player_t* player, int dx, int dy, grid_t* grid) `
@@ -325,14 +327,14 @@ Trivial constructor for a new player.
         do nothing
 ```
 
-#### `void player_collect_gold(player_t* player, int gold_x, int gold_y, grid_t* grid)`
+#### `void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y, grid_t* grid)`
 ```
     update player's purse
     update gold pile's value in grid
     decrement number of remaining gold piles in grid
     send a GOLD message to all clients with updated locations
 ```
-#### `void player_update_visibility(player_t* player, grid_t* grid, hashmap_t* cache)`
+#### `void player_update_visibility(player_t* player, grid_t* grid)`
 This function is cached **[FOR EXTRA CREDIT]** in a hashmap: if **any** previous player has been at the spot, we store all cells that are visible from that spot. If not, we compute the visibility layer from scratch and cache it.
 ```
     x, y = player's position
@@ -355,9 +357,9 @@ This function is cached **[FOR EXTRA CREDIT]** in a hashmap: if **any** previous
 ```
 [Note: this algorithm runs in O(mn(m+n)) time, where the grid has size (m,n). We could optimize to O(mn) at the cost of simplicity, using trigonometry.]
 
-#### `void player_quit(player_t* player, grid_t* grid)`
+#### `void player_quit(player_t* player)`
 Trivial function that removes player from grid, then calls `player_delete`.
-#### `player_delete(player_t* player)`
+#### `player_delete(player_t* player),grid_t* grid`
 Trivial function to delete.
 
 ### Major data structures
@@ -370,24 +372,24 @@ A module that handles the spectator data: their connection info. It handles send
 
 ### Functional decomposition
 
-`spectator_t* spectator_new(char* conn_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+`spectator_t* spectator_new(addr_t* connection_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
-`void spectator_get_map(spectator_t* spectator, grid_t* grid)`: Constructs and sends display message to spectator.
+`addr_t* spectator_get_addr(spectator_t* spectator)`: Get the address of a spectator.
 
-`void spectator_quit(spectator_t* player)`: Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
+`void spectator_quit(spectator_t* player, grid_t* grid)`: Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
 
 `spectator_delete(spectator_t* spectator)`: Deallocates memory associated with the spectator.
 
 ### Pseudo code for logic/algorithmic flow
 
-#### `spectator_t* spectator_new(char* conn_info)`
+#### `spectator_t* spectator_new(addr_t* connection_info)`
 Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
-#### `void spectator_get_map(spectator_t* spectator, grid_t* grid)`
+#### `addr_t* spectator_get_addr(spectator_t* spectator)`
 Constructs and sends display message to spectator.
 
-#### `void spectator_quit(spectator_t* spectator)`
-Trivial function, which gracefully handles
+#### `void spectator_quit(spectator_t* player, grid_t* grid)`
+Get the address of a spectator.
 
 #### `spectator_delete(spectator_t* spectator)`
 Trivial function to deallocate memory associated with the spectator.
