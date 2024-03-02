@@ -48,14 +48,12 @@ int main(int argc, char* argv[]) {
     int int2;
     while (scanf("%d %d", &int1, &int2) == 2) {
         player_move(player, grid, int1, int2);
-        player_update_visibility(player, grid);
         print_curr_state(res, map, nr, nc, player, grid);
     }
     player_quit(player_2);
     rewind(stdin);
     while (scanf("%d %d", &int1, &int2) == 2) {
         player_move(player, grid, int1, int2);
-        player_update_visibility(player, grid);
         print_curr_state(res, map, nr, nc, player, grid);
     }
     grid_game_over(grid);
@@ -66,7 +64,6 @@ int main(int argc, char* argv[]) {
 static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player, grid_t* grid) {
     int flag;
     player_t** players = grid_getplayers(grid);
-    printf("HEREEE\n");
     for (int i = 0; i < nr; i++) {
         for (int j = 0; j < nc; j++) {
             if (i == player_get_x(player) && j == player_get_y(player)) {
