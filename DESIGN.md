@@ -224,17 +224,17 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
 
 `int grid_init_gold(grid_t* grid)`: Drops gold piles on the grid at the start of the game.
 
-`void grid_spawn_player(grid_t* grid)`: Randomly places a player onto a spot on the grid.
+`void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`: Randomly places a player onto a spot on the grid.
 
-`void grid_spawn_spectator(grid_t* grid)`: Places a spectator.
+`void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`: Places a spectator and ensures only one spectator is present on the grid at one time.
 
 `void grid_send_state(grid_t* grid, player_t* player)`: Sends the current game state to a player client.
 
-`void grid_send_state(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
+`void grid_send_state_spectator(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
 
 `void grid_game_over(grid_t* grid)`: Handles the end of the game by preparing a summary and cleaning up.
 
-`void grid_delete(grid_t* grid)`: Cleans up and deallocates memory associated with grid.
+** Getter functions included as helper functions to faciliatate easy integration. 
 
 ### Pseudo code for logic/algorithmic flow
 
@@ -248,13 +248,13 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
 Drop gold nugget piles with at least 1 nugget per pile
 Update the grid to reflect the gold piles 
 
-#### `void grid_spawn_player(grid_t* grid, char* name, char* conn_info)`:
+#### `void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`:
 	Calculate random spot on the grid
 	Place new player with new symbol
 If player is already in spot
 		Calculate another random spot
 
-#### `void grid_spawn_spectator(grid_t* grid)`:
+#### `void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`:
 	Calculate random spot on the grid
 	Place new spectator 
 	If spectator is already present
@@ -264,7 +264,7 @@ If player is already in spot
 	Create a message about current game state
 	Send the message to the specified player client.
 	
-#### `void grid_send_state(grid_t* grid, spectator_t* spectator)`:
+#### `void grid_send_spectator_state(grid_t* grid, spectator_t* spectator)`:
 	Create a message about current game state
 	Send the message to the specified spectator client.
 
