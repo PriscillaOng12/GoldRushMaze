@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 #include "grid.h"
 #include "player.h"
 #include "spectator.h"
@@ -117,7 +118,7 @@ int grid_init_gold(grid_t* grid) {
     int GoldTotal = 250;
     int GoldMinNumPiles = 10;
     int GoldMaxNumPiles = 30;
-    srand(time(NULL));
+    // srand(time(NULL));
 
     // Calculate the number of gold piles to be dropped within a certain area
     int num_gold = GoldMinNumPiles + rand() % (GoldMaxNumPiles - GoldMinNumPiles + 1);
@@ -309,13 +310,17 @@ void grid_send_state_spectator(grid_t* grid, spectator_t* spectator) {
 void grid_game_over(grid_t* grid) {
     char* message = (char*)malloc(129 * sizeof(char));
     for (int i = 0; i < *grid->playerCount; i++) {
-        int purse = player_get_purse(grid->players[i]);
-        char* name = player_get_name(grid->players[i]);
-        addr_t* playerAddress = player_get_addr(grid->players[i]);
-        // Calculate the final score and create a summary containing purse contents, score, and name
-        sprintf(message, "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
-        if (playerAddress != NULL) {
-            message_send(*playerAddress, message);
+        if (grid_getplayers(grid)[i] != NULL) {
+            int purse = player_get_purse(grid->players[i]);
+            char* name = player_get_name(grid->players[i]);
+            addr_t* playerAddress = player_get_addr(grid->players[i]);
+            // Calculate the final score and create a summary containing purse contents, score, and name
+            sprintf(message, "Game Over\nPlayer %s - Score: %d, Nuggets: %d\n", name, purse * 100, purse);
+            if (playerAddress != NULL) {
+                message_send(*playerAddress, message);
+            } else {
+                printf("%s\n", message);
+            }
         }
     }
     grid_delete(grid);
