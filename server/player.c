@@ -43,7 +43,7 @@ player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int
     player->connection_info = connection_info;
     player->x = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for x");
     player->y = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for y");
-    player->isactive = (bool*) mem_assert(malloc(sizeof(bool)), "Error allocating space for hasquit");
+    player->isactive = (bool*) mem_assert(malloc(sizeof(bool)), "Error allocating space for isactive");
     player->purse = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for purse");
     *(player->x) = x;
     *(player->y) = y;
@@ -178,6 +178,7 @@ void player_delete(player_t* player, grid_t* grid)
     free(player->x);
     free(player->y);
     free(player->purse);
+    free(player->isactive);
     int nr = grid_getnrows(grid);
     for (int i=0; i<nr; i++) {
         free(player->visibility[i]);
@@ -234,7 +235,6 @@ bool player_move(player_t* player, grid_t* grid, int dx, int dy)
                     player_update_visibility(players[i], grid);
                 }
             }
-            grid_send_all(grid); // SENDING MESSAGE TO ALL PLAYERS
             return true;
         } else {
             return false;

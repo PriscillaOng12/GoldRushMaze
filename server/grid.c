@@ -163,11 +163,6 @@ void grid_delete(grid_t* grid) {
 
 
     free(grid->nuggetCount);
-    for (i = 0; i < *grid->playerCount; i++) { // free all players, including inactive
-        if (player_get_isactive(grid->players[i])) {
-            player_delete(grid->players[i], grid);
-        }
-    }
     free(grid->players);
     if (*grid->spectatorCount == 1) {
         spectator_delete(grid->spectator[0]);
@@ -209,7 +204,7 @@ void grid_spawn_spectator(grid_t* grid, spectator_t* spectator) {
     *grid->spectatorCount = 1;
 }
 
-void grid_send_state(grid_t* grid, player_t* player) {
+char* grid_send_state(grid_t* grid, player_t* player) {
     char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char*));
     strcpy(message, "DISPLAY\n");
     char* moving_ptr = message + 8; // index to iterate through message string
@@ -252,75 +247,72 @@ void grid_send_state(grid_t* grid, player_t* player) {
     }
 
     *moving_ptr = '\0';
-
-    addr_t* address = player_get_addr(player);
-    if (address != NULL) {
-        message_send(*address, message);
-    } else {
-        printf("%s\n", message);
-    }
     
     for (int k = 0; k < *grid->rows; k++) {
         free(message_vis[k]);
     }
     free(message_vis);
-    free(message);
+    return message;
 }
     
     
-void grid_send_state_spectator(grid_t* grid) {
+char* grid_send_state_spectator(grid_t* grid) {
     if (*grid->spectatorCount == 1) {
         spectator_t* spectator = grid_getspectator(grid);
         char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char*));
-            strcpy(message, "DISPLAY\n");
-            char* moving_ptr = message + 8; // index to iterate through message string
-            char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
-            int k;
-            for (k = 0; k < *grid->rows; k++) {
-                message_vis[k] = mem_assert(calloc(*grid->columns, sizeof(char*)), "Error allocating space for player message");
+        *message = '\0';
+        strcpy(message, "DISPLAY\n");
+        char* moving_ptr = message + 8; // index to iterate through message string
+        char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
+        int k;
+        for (k = 0; k < *grid->rows; k++) {
+            message_vis[k] = mem_assert(calloc(*grid->columns, sizeof(char*)), "Error allocating space for player message");
+        }
+        int px, py;
+        for (k = 0; k < *grid->playerCount; k++) {
+            if (player_get_isactive(grid->players[k])) {
+                px = player_get_x(grid->players[k]);
+                py = player_get_y(grid->players[k]);
+                message_vis[px][py] = (char) (65 + k);
             }
-            int px, py;
-            for (k = 0; k < *grid->playerCount; k++) {
-                if (player_get_isactive(grid->players[k])) {
-                    px = player_get_x(grid->players[k]);
-                    py = player_get_y(grid->players[k]);
-                    message_vis[px][py] = (char) (65 + k);
-                }
-            }
+        }
 
-            for (int i = 0; i < *grid->rows; i++) {
-                for (int j = 0; j < *grid->columns; j++) {
-                        if ((message_vis[i][j] < 65 || message_vis[i][j] > 90)) {
-                            if (grid->nuggets[i][j] > 0) {
-                                message_vis[i][j] = '*';
-                            } else {
-                                message_vis[i][j] = grid->cells[i][j];
-                            }
-                            *moving_ptr = message_vis[i][j];
+        for (int i = 0; i < *grid->rows; i++) {
+            for (int j = 0; j < *grid->columns; j++) {
+                    if ((message_vis[i][j] < 65 || message_vis[i][j] > 90)) {
+                        if (grid->nuggets[i][j] > 0) {
+                            message_vis[i][j] = '*';
                         } else {
-                            *moving_ptr = grid->cells[i][j];
+                            message_vis[i][j] = grid->cells[i][j];
                         }
-                        moving_ptr++;
+                        *moving_ptr = message_vis[i][j];
+                    } else {
+                        *moving_ptr = grid->cells[i][j];
                     }
-                *moving_ptr = '\n';
-                moving_ptr++;
-            }
+                    moving_ptr++;
+                }
+            *moving_ptr = '\n';
+            moving_ptr++;
+        }
 
-            *moving_ptr = '\0';
+        *moving_ptr = '\0';
 
-            addr_t* address = spectator_get_addr(spectator);
-            if (address != NULL) {
-                message_send(*address, message);
-            } else {
-                printf("%s\n", message);
-            }
-            for (int k = 0; k < *grid->playerCount; k++) {
-                free(message_vis[k]);
-            }
-            free(message_vis);
-            free(message);
+        addr_t* address = spectator_get_addr(spectator);
+        if (address != NULL) {
+            message_send(*address, message);
+        } else {
+            printf("%s\n", message);
+        }
+        for (int k = 0; k < *grid->playerCount; k++) {
+            free(message_vis[k]);
+        }
+        free(message_vis);
+        return message;
+    } else {
+        char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char*)); 
+        *message = '\0';
+        return message;
     }
-    
 }
 
 
@@ -345,21 +337,13 @@ void grid_game_over(grid_t* grid) {
                 // printf("%s\n", message);
             }
         }
+        player_delete(grid_getplayers(grid)[i], grid);
     }
+
     grid_delete(grid);
     free(message);
     free(buffer);
 }
-
-void grid_send_all(grid_t* grid) {
-    for (int i = 0; i < *grid->playerCount; i++) {
-        if (player_get_isactive(grid->players[i])) {
-            grid_send_state(grid, grid->players[i]);
-        }
-    }
-    grid_send_state_spectator(grid);
-}
-
 
 int grid_getnrows(grid_t* grid) {
     return *grid->rows;
