@@ -211,7 +211,6 @@ void grid_spawn_spectator(grid_t* grid, spectator_t* spectator) {
 
 void grid_send_state(grid_t* grid, player_t* player) {
     char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 1) * sizeof(char*) + 8);
-    strcat(message, "DISPLAY\n");
     char* moving_ptr = message; // index to iterate through message string
     int** visibility = player_get_visibility(player);
     char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
