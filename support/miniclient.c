@@ -23,6 +23,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message);
 int
 main(const int argc, char* argv[])
 {
+  printf("test");
   // initialize the message module (without logging)
   if (message_init(NULL) == 0) {
     return 2; // failure to initialize message module
