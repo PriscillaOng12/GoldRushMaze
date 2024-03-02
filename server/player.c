@@ -27,6 +27,7 @@ typedef struct player {
     int* x;
     int* y;
     int** visibility;
+    bool* isactive;
 } player_t;
 
 player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)
@@ -42,10 +43,12 @@ player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int
     player->connection_info = connection_info;
     player->x = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for x");
     player->y = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for y");
+    player->isactive = (bool*) mem_assert(malloc(sizeof(bool)), "Error allocating space for hasquit");
     player->purse = (int*) mem_assert(malloc(sizeof(int)), "Error allocating space for purse");
     *(player->x) = x;
     *(player->y) = y;
     *(player->purse) = 0;
+    *(player->isactive) = true;
     return player;
 }
 
@@ -195,7 +198,7 @@ void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)
         grid_setnuggetcount(grid, grid_getnuggetcount(grid) - 1);
         int num_players = grid_getplayercount(grid);
         for (int i = 0; i < num_players; i++) {
-            if (players[i] != NULL) {
+            if (*(players[i]->isactive)) {
                 char* message = (char*) mem_assert(malloc(sizeof(char) * 50), "Error allocating memory for gold message string\n"); // GOLD N P R
                 sprintf(message, "GOLD %d %d %d", (players[i] == player ? gold_obtained : 0), *player->purse, grid_getnuggetcount(grid));
                 if (player_get_addr((players[i])) != NULL) {
@@ -217,7 +220,7 @@ bool player_move(player_t* player, grid_t* grid, int dx, int dy)
         if (grid_getcells(grid)[x+dx][y+dy] == '.' || grid_getcells(grid)[x+dx][y+dy] == '#' ) {
             player_t** players = grid_getplayers(grid);
             for (int i = 0; i < grid_getplayercount(grid); i++) {
-                if (players[i] != NULL) {
+                if (players[i]->isactive) {
                     if (player_get_x(players[i]) == x + dx && player_get_y(players[i]) == y + dy) {
                         player_moveto(players[i], x, y);
                         break;
@@ -227,10 +230,11 @@ bool player_move(player_t* player, grid_t* grid, int dx, int dy)
             player_moveto(player, x+dx, y+dy);
             player_collect_gold(player, grid, x+dx, y+dy);
             for (int i = 0; i < grid_getplayercount(grid); i++) {
-                if (players[i] != NULL) {
+                if (players[i]->isactive) {
                     player_update_visibility(players[i], grid);
                 }
             }
+            grid_send_all(grid); // SENDING MESSAGE TO ALL PLAYERS
             return true;
         } else {
             return false;
@@ -241,18 +245,9 @@ bool player_move(player_t* player, grid_t* grid, int dx, int dy)
     }
 }
 
-void player_quit(player_t* player, grid_t* grid)
+void player_quit(player_t* player)
 {
-    player_t** players = grid_getplayers(grid);
-    for (int i = 0; i < grid_getplayercount(grid); i++) {
-        if (players[i] != NULL) {
-            if (players[i] == player) {
-                players[i] = NULL;
-                player_delete(player, grid);
-                break;
-            }
-        }
-    }
+    *player->isactive = false;
 }
 
 char* player_get_name(player_t* player)
@@ -287,6 +282,10 @@ int** player_get_visibility(player_t* player)
 
 void player_set_visibility(player_t* player, int x, int y, int val) {
     player->visibility[x][y] = val;
+}
+
+bool player_get_isactive(player_t* player) {
+    return *player->isactive;
 }
 
 static int min(int a, int b)

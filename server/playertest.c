@@ -36,9 +36,9 @@ int main(int argc, char* argv[]) {
 
     grid_spawn_player(grid, NULL, "tester2");
     grid_spawn_player(grid, NULL, "tester3");
+    grid_spawn_player(grid, NULL, "tester4");
     player_t* player = grid_getplayers(grid)[0];
     player_t* player_2 = grid_getplayers(grid)[1];
-    // player_t* player2 = grid_getplayers(grid)[1];
     int** res =  player_get_visibility(player);
     char** map = grid_getcells(grid);
     print_map(map, nr, nc);
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
         player_update_visibility(player, grid);
         print_curr_state(res, map, nr, nc, player, grid);
     }
-    player_quit(player_2, grid);
+    player_quit(player_2);
     rewind(stdin);
     while (scanf("%d %d", &int1, &int2) == 2) {
         player_move(player, grid, int1, int2);
@@ -66,6 +66,7 @@ int main(int argc, char* argv[]) {
 static void print_curr_state(int** res, char** map, int nr, int nc, player_t* player, grid_t* grid) {
     int flag;
     player_t** players = grid_getplayers(grid);
+    printf("HEREEE\n");
     for (int i = 0; i < nr; i++) {
         for (int j = 0; j < nc; j++) {
             if (i == player_get_x(player) && j == player_get_y(player)) {
@@ -76,7 +77,7 @@ static void print_curr_state(int** res, char** map, int nr, int nc, player_t* pl
                 } else if (res[i][j] == 1) {
                     flag = -1;
                     for (int k = 0; k < grid_getplayercount(grid); k++) {
-                        if (players[k] != NULL) {
+                        if (player_get_isactive(players[k])) {
                             if (player_get_x(players[k]) == i  && player_get_y(players[k]) == j) {
                                 flag = k;
                                 break;
