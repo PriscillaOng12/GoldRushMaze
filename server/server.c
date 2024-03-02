@@ -16,8 +16,10 @@
 
 static bool parseArgs(const int argc, const char** argv);
 static bool handleMessage(void* arg, const addr_t from, const char* message);
+// grid_t* gameGrid;
 
 int main(const int argc, const char** argv) {
+  printf("hello");
 
   //validate args
   if (!parseArgs(argc, argv)) {
@@ -25,29 +27,39 @@ int main(const int argc, const char** argv) {
   }
 
   //initialize message module
-  if (message_init(NULL) == 0) {
+  int serverPort;
+  FILE* logFP = fopen("server.log", "w");
+  if ((serverPort = message_init(logFP)) == 0) {
     return 1;
   }
 
-  //FIGURE OUT HOW TO GET ADDRESS INFORMATION
-  char* serverHost = "127.0.0.1";
-  char* serverPort = "8080";
-  addr_t* server;
-  if (!message_setAddr(serverHost, serverPort, server)) {
-    fprintf(stderr, "can't form address from %s %s\n", serverHost, serverPort);
-    return 4; // bad hostname/port
-  }
+  printf("Server port is:%d", serverPort);
 
-  char* mapPath = malloc(strlen(argv[2]) + 9);
-  strcpy(mapPath, "../maps/");
-  strcat(mapPath, argv[1]);
-  FILE* fp = fopen(mapPath, "r");
+  // //FIGURE OUT HOW TO GET ADDRESS INFORMATION
+  // char* serverHost = "plank.thayer.dartmouth.edu";
+  // char* serverPortString;
+  // sprintf(serverPortString, "%d", serverPort);
+  // addr_t server;
+  // if (!message_setAddr(serverHost, serverPort, &server)) {
+  //   fprintf(stderr, "can't form address from %s %s\n", serverHost, serverPort);
+  //   return 4; // bad hostname/port
+  // }
+
+
+  // char* mapPath = malloc(strlen(argv[1]) + 9);
+  // strcpy(mapPath, "../maps/");
+  // strcat(mapPath, argv[1]);
+  FILE* fp = fopen(argv[1], "r");
   grid_t* gameGrid = grid_load(fp);
+  fclose(fp);
+  // free(mapPath);
 
-  message_loop(&gameGrid, 0, NULL, NULL, handleMessage);
+  message_loop(gameGrid, 0, NULL, NULL, handleMessage);
 
   message_done();
-  
+
+  // grid_game_over(gameGrid);
+
   return 0;
 }
 
@@ -60,7 +72,7 @@ static bool parseArgs(const int argc, const char** argv) { //CHANGE IMPLEMENTATI
   }
   
   //validate file can be opened
-  char* mapPath = malloc(strlen(argv[2]) + 9);
+  char* mapPath = malloc(strlen(argv[1]) + 9);
   strcpy(mapPath, "../maps/");
   strcat(mapPath, argv[1]);
   FILE* fp = fopen(mapPath, "r");
@@ -70,6 +82,7 @@ static bool parseArgs(const int argc, const char** argv) { //CHANGE IMPLEMENTATI
     return false;
   }
   free(mapPath);
+  fclose(fp);
 
   //assumes seed will be integer
   if (argc == 3) {
@@ -93,15 +106,15 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   //set max name length to 50 chars
   int MaxNameLength = 50;
   int MaxPlayers = 26;
-  grid_t* gameGrid = arg;
+  grid_t* gameGrid = (grid_t*) arg;
   player_t** playerList = grid_getplayers(gameGrid); //THIS METHOD MUST BE MADE
   int playerCount = grid_getplayercount(gameGrid); //THIS METHOD MUST BE MADE
-
   //get first word from message
   char* firstWord;
   int firstSpace = 0;
   while (!isspace(message[firstSpace])) {
     firstSpace++;
+    printf("%d", firstSpace);
   }
   //amount of bytes needed for first word of message + 1 for null terminating
   firstWord = malloc(firstSpace + 1);
@@ -114,8 +127,8 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       message_send(from, "QUIT Game is full: no more players can join.");
     }
     //get real_name, i.e. rest of message
-    char* real_name = malloc(strlen(message) - firstSpace - 1);
-    strcpy(real_name, &message[firstSpace + 1]);
+    char* real_name = mem_assert(malloc(128), "Error allocating space"); //prob
+    strcpy(real_name, message+5); //problem
     //if name is empty, send error message
     if (strcmp(real_name, "") == 0) {
       message_send(from, "QUIT Sorry - you must provide player's name.");
@@ -135,19 +148,19 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     grid_spawn_player(gameGrid, &from, real_name_truncated);
     //send OK message with player symbol
     char playerCharacter = (char)(playerCount + 1);
-    char* messageToSend = malloc(4);
+    char* messageToSend = malloc(128);
     strcpy(messageToSend, "OK ");
-    strcat(messageToSend, &playerCharacter); //MAKING CHAR INTO CHAR*
+    strcat(messageToSend, &playerCharacter); //MAKING CHAR INTO CHAR*, problem
     messageToSend[playerCount] = '\0';
     message_send(from, messageToSend);
     free(messageToSend);
 
     //send initial GRID message with grid information
-    char* nrows = NULL;
-    sprintf(nrows, "%d", grid_getnrows(gameGrid));
-    char* ncols = NULL;
+    char* nrows = malloc(sizeof(int));
+    sprintf(nrows, "%d", grid_getnrows(gameGrid));//problem
+    char* ncols = malloc(sizeof(int));
     sprintf(ncols, "%d", grid_getncols(gameGrid));
-    messageToSend = realloc(messageToSend, 5 + strlen(nrows) + 1 + strlen(ncols) + 1);
+    messageToSend = malloc(128);
     strcpy(messageToSend, "GRID ");
     strcat(messageToSend, nrows);
     strcat(messageToSend, " ");
@@ -157,9 +170,9 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     free(messageToSend);
 
     //send initial GOLD message
-    char* remainingGold = NULL;
+    char* remainingGold = malloc(sizeof(int));
     sprintf(remainingGold, "%d", grid_getnuggetcount(gameGrid));
-    messageToSend = realloc(messageToSend, 9 + strlen(remainingGold) + 1);
+    messageToSend = malloc(128);
     strcpy(messageToSend, "GOLD 0 0 ");
     strcat(messageToSend, remainingGold);
     messageToSend[9 + strlen(remainingGold)] = '\0';
@@ -182,7 +195,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     }
     
     char* keyStroke = malloc(strlen(message) - 5);
-    strcpy(keyStroke, message[4]);
+    strcpy(keyStroke, &message[4]); //DOES THIS WORK
     if (strcmp(keyStroke, "h") == 0) {
       player_moveto(matchingPlayer, -1, 0);
     }
