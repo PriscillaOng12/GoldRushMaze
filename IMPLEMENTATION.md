@@ -13,13 +13,11 @@ We avoid repeating information that is provided in the requirements spec.
 ## Plan for division of labor
 
 - Edward will handle the server setup, focusing on communication. He'll cover testing and documentation for this.
-- Edward will write the grid module. She'll cover testing and documentation for this.
+- Eliana will write the grid module. She'll cover testing and documentation for this.
 - Priscilla will handle the client, and working with ncurses. She'll cover testing and documentation for this.
-- Edward will write the player and spectator modules. She'll cover testing and documentation for this.
+- Karun will write the player and spectator modules. She'll cover testing and documentation for this.
 
 ## Client
-
-> Teams of 3 students should delete this section.
 
 ### Data structures
 
@@ -184,17 +182,17 @@ Player:
 
 `int grid_init_gold(grid_t* grid)`: Drops gold piles on the grid at the start of the game.
 
-`void grid_spawn_player(grid_t* grid)`: Randomly places a player onto a spot on the grid.
+`void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`: Randomly places a player onto a spot on the grid.
 
-`void grid_spawn_spectator(grid_t* grid)`: Places a spectator.
+`void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`: Places a spectator and ensures only one spectator is present on the grid at one time.
 
 `void grid_send_state(grid_t* grid, player_t* player)`: Sends the current game state to a player client.
 
-`void grid_send_state(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
+`void grid_send_state_spectator(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
 
 `void grid_game_over(grid_t* grid)`: Handles the end of the game by preparing a summary and cleaning up.
 
-`void grid_delete(grid_t* grid)`: Cleans up and deallocates memory associated with grid.
+** Getter functions included as helper functions to faciliatate easy integration. 
 
 ### Detailed pseudo code
 #### `grid_t* grid_load(char* filename)`:
@@ -237,25 +235,139 @@ If player is already in spot
 #### `void grid_delete(grid_t* grid)`:
 	Deallocate memory associated with the game grid 
 
+## Player module
+
+### Data structures
+
+The only extra data structure is the visibility layer, which is a 2D Boolean array.
+
+### Definition of function prototypes
+
+`player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
+
+`bool player_move(player_t* player, grid_t* grid, int dx, int dy) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
+
+`void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)`: Updates the player's purse and the location of the gold piles, and sends a `GOLD` message to all clients with updated locations.
+
+`void player_update_visibility(player_t* player, grid_t* grid)`: Updates the player's visibility layer. Called by `player_move`.
+
+`void player_quit(player_t* player)`: Called by grid module when a player quits. Gracefully handles quit, then calls `player_delete`.
+
+`player_delete(player_t* player, grid_t* grid)`: Deallocates memory associated with the player.
+
+** Getter and setter functions included as helper functions to faciliatate easy integration. 
+
+### Detailed pseudo code
+
+#### `player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`
+Trivial constructor for a new player.
+
+#### `void player_move(player_t* player, int dx, int dy, grid_t* grid) `
+```
+    if (player->x + dx, player->y + dy) is a valid move:
+        if there is a player in the new position:
+            call player_move on the other player with the opposite dx and dy
+            call update_visibility on the other player
+        update player's position
+        call update_visibility on the player
+        if there is a gold pile in the new position:
+            call player_collect_gold
+        send a DISPLAY message to all clients with updated locations
+    else:
+        do nothing
+```
+
+#### `void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y, grid_t* grid)`
+```
+    update player's purse
+    update gold pile's value in grid
+    decrement number of remaining gold piles in grid
+    send a GOLD message to all clients with updated locations
+```
+#### `void player_update_visibility(player_t* player, grid_t* grid)`
+This function is cached **[FOR EXTRA CREDIT]** in a hashmap: if **any** previous player has been at the spot, we store all cells that are visible from that spot. If not, we compute the visibility layer from scratch and cache it.
+```
+    x, y = player's position
+    if (num_rows * x + y) is already cached:
+        player->visibility = player_visibility OR cached // element-wise OR
+    vis_cache = 2d array size of grid, initialized to 0s
+    for each cell (i, j) in the grid
+        compute functions get_y(x), get_x(y) for the line (point-slope)
+        visible = True
+        for p in [x, i]:
+            if (p, floor(get_y(p))) and (p, ceil(get_y(p))) are both walls:
+                visible = False
+        for q in [y, j]:
+            if (floor(get_x(q)), q) and (ceil(get_x(q)), q) are both walls:
+                visible = False
+        if visible:
+            player->visibility[i][j] = 1
+            cached[i][j] = 1
+    cached[num_rows * x + y] = vis_cache
+```
+[Note: this algorithm runs in O(mn(m+n)) time, where the grid has size (m,n). We could optimize to O(mn) at the cost of simplicity, using trigonometry.]
+
+#### `void player_quit(player_t* player)`
+Trivial function that removes player from grid, then calls `player_delete`.
+#### `player_delete(player_t* player),grid_t* grid`
+Trivial function to delete.
+
+## Spectator module
+
+### Data structures
+No specific data structures are used.
+
+### Definition of function prototypes
+`spectator_t* spectator_new(addr_t* connection_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+
+`addr_t* spectator_get_addr(spectator_t* spectator)`: Get the address of a spectator.
+
+`void spectator_quit(spectator_t* player, grid_t* grid)`: Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
+
+`spectator_delete(spectator_t* spectator)`: Deallocates memory associated with the spectator.
+
+### Detailed pseudo code
+
+#### `spectator_t* spectator_new(addr_t* connection_info)`
+Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+
+#### `addr_t* spectator_get_addr(spectator_t* spectator)`
+Constructs and sends display message to spectator.
+
+#### `void spectator_quit(spectator_t* player, grid_t* grid)`
+Get the address of a spectator.
+
+#### `spectator_delete(spectator_t* spectator)`
+Trivial function to deallocate memory associated with the spectator.
+
 ---
 
 ## Testing plan
 
-### unit testing
+### Unit testing
 
-> How will you test each unit (module) before integrating them with a main program (client or server)?
+`Grid Module`: Test loading from various map files, including edge cases like empty or exceptionally large maps. Check for proper initialization of gold and validation of grid dimensions. Test each grid manipulation function (e.g., grid_spawn_player, grid_init_gold) in isolation to ensure they behave as expected under different grid states.
 
-### integration testing
+`Player Module`: Create mock player objects and test functions such as player_move, player_collect_gold, and player_update_visibility. Use predefined grid states to ensure player movements and interactions are correctly handled.
 
-> How will you test the complete main programs: the server, and for teams of 4, the client?
+`Spectator Module`: Test spectator creation and ensure that the spectator can correctly receive game state updates. Test the behavior when switching spectators.
+
+
+### Integration testing
+
+`Server`: Test the server's ability to handle multiple connections, manage game state, and correctly process and respond to messages from clients. This includes testing game initialization, player movements, gold collection, and spectator updates.
+
+`Client`: Test the client's ability to parse server messages, update the local display correctly, and send appropriate responses back to the server. Verify the client's handling of different game states and transitions.
 
 ### system testing
 
-> For teams of 4: How will you test your client and server together?
+`Client and Server Together`: Test the complete system by running the server and connecting multiple clients, including both players and spectators. Evaluate the system's performance in real-time gameplay, ensuring synchronization between server and clients, and verifying the correct game logic execution. Test scenarios include starting a game, player movements and interactions, gold collection, spectator viewing, and game termination.
 
 ---
 
 ## Limitations
+`Spectator Limit`: Only one spectator is allowed at a time, limiting the number of people who can view the game state without participating
 
-> Bulleted list of any limitations of your implementation.
-> This section may not be relevant when you first write your Implementation Plan, but could be relevant after completing the implementation.
+`Client Interface`: The client interface, particularly for handling user inputs and displaying the game state, may not be optimized for usability or accessibility.
+
+`Scalability`: The system may not efficiently scale to support a very large number of players or spectators simultaneously due to limitations in server processing and network bandwidth.
