@@ -47,13 +47,13 @@ To compile, simply type `make` in command line.
 
 `testing.sh` covers unit tests of  `client` with shared server at `cs50-dev/shared/nuggets/linux/server` and `main.txt` map.
 
-To run unit tests with `testing.sh`:
+To run unit tests with `make test`:
 1. Run `cs50-dev/shared/nuggets/linux/server cs50-dev/shared/nuggets/linux/maps/main.txt`. The shared server module will print a port number.
-2. Change the `SERVER_PORT` number in in testing.sh to the port number printed
-2. In a separate terminal, run `./testing.sh/`
+2. Change the `SERVER_PORT` number in testing.sh to the port number printed
+2. In a separate terminal, run `make test`
 
-### Testing
 
+### Overall Testing 
 
 To test, `make test` in the `server` directory which will print out the port number that the client shall connect to. Run the `client` module with that port number and the appropriate hostname that the server is being run on. Pass a player name to join the game in play mode. Otherwise, join the game as a spectator. Collect all the gold. 
  
