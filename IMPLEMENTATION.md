@@ -17,35 +17,345 @@ We avoid repeating information that is provided in the requirements spec.
 - Priscilla will handle the client, and working with ncurses. She'll cover testing and documentation for this.
 - Karun will write the player and spectator modules. She'll cover testing and documentation for this.
 
-## Client
+## Player
 
 ### Data structures
 
-> For each new data structure, describe it briefly and provide a code block listing the `struct` definition(s).
-> No need to provide `struct` for existing CS50 data structures like `hashtable`.
+Create a `localclient_t` data structure in order to hold information for each of the players that join the client.
+
+This localclient data structure keeps track of the player’s characteristics such as playerID, purse, and the amount of gold remaining. It also keeps track of the size of the window, whether the player is a spectator, and the port number.
+
 
 ### Definition of function prototypes
 
-> For function, provide a brief description and then a code block with its function prototype.
-> For example:
-
-A function to parse the command-line arguments, initialize the game struct, initialize the message module, and (BEYOND SPEC) initialize analytics module.
-
+#### Function Prototypes
 ```c
-static int parseArgs(const int argc, char* argv[]);
+int main(int argc, char* argv[]);
+static bool handleMessage(void* arg, const addr_t from, const char* message);
+static bool handleInput(void* arg);
+static void cursesInit(); 
+static void setupWindow();
+static void displayMap(char* display);
+static void displayTempMessage(const char* temp);
+static void clearTempMessage();
+static bool gameOk(const char* message);
+static bool gameGrid(const char* message);
+static bool gameGold(const char* message);
+static void gameDisplay(const char* message);
+static localclient_t* data_new();
 ```
+
+
+`main` Initializes the client application, processes command-line arguments for server connection details, and manages the game's main loop. This function sets up the client's environment, including initializing the data structure and the messaging system, and then continuously handles user input and server messages until the game concludes.
+```c
+int main(int argc, char* argv[]);
+```
+
+
+`handleMessage` Processes incoming messages from the server and dispatches them to appropriate handler functions based on the message type. This function is responsible for interpreting server commands such as game state updates, error messages, and game conclusion signals, ensuring that the client responds appropriately to each.
+```c
+handleMessage(void* arg, const addr_t from, const char* message);
+static bool handleInput(void* arg);
+```
+
+
+`handleInput` Captures user input from the keyboard and sends corresponding actions to the server. This function is crucial for enabling player interaction with the game, allowing users to move around the map, collect gold, and communicate with other players or spectators.
+```c
+static bool handleInput(void* arg);
+```
+
+
+`cursesInit` Sets up the ncurses library for rendering the game interface. This function configures the terminal to support real-time input handling and graphical output, providing the foundation for the game's visual presentation.
+```c
+static void cursesInit(); 
+```
+
+
+`setupWindow` Prepares the initial game window, clearing any pre-existing content and setting it up for game display. This function is called after initializing curses to ensure that the game's graphical interface starts from a clean slate.
+```c
+static void setupWindow();
+```
+
+
+`displayMap` Renders the game map on the screen based on the latest layout received from the server. This function translates the server-provided map data into visual elements, updating the game window to reflect the current state of the game world.
+```c
+static void displayMap(char* display);
+```
+
+
+`displayTempMessage` Shows temporary messages, such as errors or notifications, at the top of the game window. This function ensures that important information is communicated to the player promptly without disrupting the game display.
+```c
+static void displayTempMessage(const char* temp);
+```
+
+
+`clearTempMessage` Removes any temporary messages currently displayed to the user. This function is typically called before showing a new message or updating the game window to keep the display uncluttered.
+```c
+static void clearTempMessage();
+```
+
+
+`gameOk` Handles the "OK" message from the server, which confirms successful communication or actions. This function might update the client state or UI to reflect the successful operation as indicated by the server.
+```c
+static bool gameOk(const char* message);
+```
+
+
+`gameGrid` Processes the "GRID" message containing the dimensions of the game map. This function updates the client's internal representation of the game world size, adjusting the display parameters accordingly.
+```c
+static bool gameGrid(const char* message);
+```
+
+
+`gameGold` Interprets the "GOLD" message from the server, which provides updates on gold collected by the player or remaining in the game. This function ensures that the player is kept informed about their progress and the state of the game.
+```c
+static bool gameGold(const char* message);
+```
+
+
+`gameDisplay` Updates the game window with the current map layout received from a "DISPLAY" message. This function ensures that the game map is accurately rendered on the user's screen, providing a visual representation of the game state.
+```c
+static void gameDisplay(const char* message);
+```
+
+
+`data_new` Allocates and initializes a new instance of the `localclient_t` data structure. This function sets up the foundational data model for the client, preparing it to handle and display the game state.
+```c
+static localclient_t* data_new();
+```
+
+
 ### Detailed pseudo code
 
-> For each function write pseudocode indented by a tab, which in Markdown will cause it to be rendered in literal form (like a code block).
-> Much easier than writing as a bulleted list!
-> For example:
+#### `main`:
 
-#### `parseArgs`:
+	START
+	VALIDATE command-line arguments
+	IF arguments count NOT equal to 3 AND NOT equal to 4 THEN
+		PRINT error message
+		EXIT with code 1
+	END IF
 
-	validate commandline
-	initialize message module
-	print assigned port number
-	decide whether spectator or player
+	FOR each argument STARTING from 1 to argc-1 DO
+		IF argument is NULL THEN
+		PRINT error message
+		EXIT with code 2
+		END IF
+	END FOR
+
+	INITIALIZE data structure with data_new()
+
+	IF message module initialization fails THEN
+		FREE data
+		EXIT with code 3
+	END IF
+
+	PREPARE server address
+	IF server address preparation fails THEN
+		FREE data
+		EXIT with code 4
+	END IF
+
+	CONNECT to server as player or spectator
+		IF playername provided THEN
+		SEND "PLAY playername" message
+		ELSE
+		SEND "SPECTATE" message
+		END IF
+
+		IF connection setup fails THEN
+		SEND quit message
+		CLEAN UP and EXIT with code 6
+		END IF
+
+	ENTER message loop
+		HANDLE user input and server messages
+
+	CLEAN UP resources
+	CLOSE curses window
+	SHUTDOWN message module
+
+	RETURN success or failure
+	END
+
+
+#### `handleMessages`:
+	
+	START
+	CHECK for NULL arguments
+	IDENTIFY message type
+
+	IF message starts with "OK " THEN
+		PROCESS "OK" message
+		IF processing fails THEN
+		SEND quit message and EXIT
+		END IF
+
+	ELSE IF message starts with "GRID " THEN
+		PROCESS "GRID" message
+		IF processing fails THEN
+		SEND quit message and EXIT
+		END IF
+
+	ELSE IF message starts with "GOLD " THEN
+		PROCESS "GOLD" message
+
+	ELSE IF message starts with "DISPLAY\n" THEN
+		PROCESS display message
+
+	ELSE IF message starts with "QUIT " THEN
+		CLOSE curses window and EXIT
+
+	ELSE IF message starts with "ERROR " THEN
+		LOG error message
+		DISPLAY temporary message
+
+	ELSE
+		LOG malformed message warning
+	END IF
+
+	CONTINUE message loop
+	END
+
+
+#### `handleInput`:
+
+    START
+	CHECK server address validity
+	READ character from input
+	PREPARE "KEY [character]" message
+	CLEAR temporary message if present
+	SEND message to server
+	CONTINUE loop
+	END
+
+
+#### `cursesInit()`
+
+	START
+	INITIALIZE the ncurses screen
+	SET cbreak mode to disable line buffering
+	DISABLE echo of input characters
+	MAKE cursor invisible
+	INITIALIZE color functionality in ncurses
+	DEFINE a color pair (e.g., cyan on black)
+	ENABLE the defined color pair for future text
+	END
+
+
+#### `setupWindow`:
+
+	START
+	GET the maximum number of rows and columns for the current window
+	FOR each row in the window
+		FOR each column in the row
+		MOVE cursor to the current row and column
+		ADD a blank space to clear the window
+		END FOR
+	END FOR
+	REFRESH the screen to apply changes
+	END
+
+
+#### `displayMap`:
+
+	START
+	FOR each row in the game board
+		FOR each column in the row
+		CALCULATE the index in the display string for the current row and column
+		MOVE cursor to the appropriate position on the screen
+		IF index is within bounds of the display string
+			DISPLAY the character from the display string at the current position
+		ELSE
+			DISPLAY a blank space
+		END IF
+		END FOR
+	END FOR
+	REFRESH the screen to show the updated map
+	END
+
+
+#### `displayTempMessage`:
+
+	START
+	GET the maximum number of rows and columns for the current window
+	FIND the starting position for the temporary message (if specified)
+	IF a temporary message is provided
+		DISPLAY the temporary message at the specified starting position
+	END IF
+	REFRESH the screen to show the temporary message
+	END
+
+
+#### `clearTempMessage`:
+
+	START
+	GET the maximum number of rows and columns for the current window
+	FOR each column in the top row of the window
+		CHECK if the current character is the start of a temporary message
+		IF so, REPLACE the character with a blank space to clear the message
+	END FOR
+	REFRESH the screen to apply the cleared area
+	END
+
+
+#### `gameOk`:
+
+	START
+	INITIALIZE buffer for character ID (`charID`) with space for 2 characters
+	PARSE character ID from message
+	PRINT parsed character ID
+
+	CHECK if character ID is valid
+		IF charID is not null THEN
+		PRINT confirmation message with character ID
+		UPDATE currentClient.playerID with parsed charID
+		END IF
+	INITIALIZE curses library
+	SETUP window with blank map
+	RETURN true indicating successful operation
+	END
+
+
+#### `gameGrid`:
+	START
+	PARSE nrows and ncols from message
+	VERIFY screen size is sufficient for grid
+		IF insufficient, PROMPT user to resize and reinitialize curses
+	UPDATE stored grid dimensions
+	RETURN true indicating successful operation
+	END
+
+
+#### `gameGold`:
+	START
+	PARSE gold information from message
+	IF parsing fails THEN
+		LOG error and RETURN false
+	END IF
+	PREPARE and DISPLAY gold status message
+	REFRESH window to update display
+	RETURN true
+	END
+
+
+#### `gameDisplay`:
+
+	START
+	EXTRACT the display content from the message after the "DISPLAY\n" header
+	DISPLAY the extracted content on the game board using the displayMap function
+	END
+
+
+#### `data_new`:
+	START
+	ALLOCATE memory for new data structure (`data`)
+		IF allocation fails THEN
+		EXIT with failure
+		END IF
+	INITIALIZE data structure with default values (-1 for NROWS and NCOLS, 0 for player)
+	RETURN pointer to newly allocated `data`
+	END
 
 ---
 
