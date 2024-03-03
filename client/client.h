@@ -5,21 +5,21 @@
 
 /**************** global types ****************/
 typedef struct localclient {
-  // size of board, initialized to initial window size
-  int NROWS;
-  int NCOLS;
-  char player; 
+  int NROWS;  // Number of rows in the game board, based on window size
+  int NCOLS;  // Number of columns in the game board, based on window size
+  char player; // Represents the player's character in the game
 } localclient_t;
+
 
 /**************** local function  ****************/
 // Functions for game communication handling
 static bool handleMessage(void* arg, const addr_t from, const char* message);
 static bool handleInput(void* arg);
-static void initialize_curses(); 
+static void cursesInit(); 
 static void setupWindow();
-static void display_map(char* display);
-static void display_temp_message(const char* temp);
-static void clear_temp_message();
+static void displayMap(char* display);
+static void displayTempMessage(const char* temp);
+static void clearTempMessage();
 
 // Functions for handling specific types of messages
 static bool gameOk(const char* message);
@@ -74,7 +74,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message);
 static bool handleInput(void* arg);
 
 
-/**************** initialize_curses ****************/
+/**************** cursesInit ****************/
 /**
  * @brief Initializes the ncurses library for displaying the game interface.
  * 
@@ -82,7 +82,7 @@ static bool handleInput(void* arg);
  * to not echo characters typed by the user, makes the cursor invisible, and sets the
  * default color pair to yellow text on a black background.
  */
-static void initialize_curses(void);
+static void cursesInit(void);
 
 
 /**************** setupWindow ****************/
@@ -95,7 +95,7 @@ static void initialize_curses(void);
 static void setupWindow(void);
 
 
-/**************** display_map ****************/
+/**************** displayMap ****************/
 /**
  * @brief Displays the game map in the ncurses window.
  * 
@@ -104,10 +104,10 @@ static void setupWindow(void);
  * 
  * @param display A string containing the map to be displayed.
  */
-static void display_map(char* display);
+static void displayMap(char* display);
 
 
-/**************** display_temp_message ****************/
+/**************** displayTempMessage ****************/
 /**
  * @brief Displays a temporary status message at the top of the game window.
  * 
@@ -117,17 +117,17 @@ static void display_map(char* display);
  * 
  * @param temp The temporary message to be displayed.
  */
-static void display_temp_message(const char* temp);
+static void displayTempMessage(const char* temp);
 
 
-/**************** clear_temp_message ****************/
+/**************** clearTempMessage ****************/
 /**
  * @brief Clears any temporary message displayed at the top of the game window.
  * 
  * This function removes temporary status messages from the top of the game window,
  * restoring the display to its state before the message was shown.
  */
-static void clear_temp_message(void);
+static void clearTempMessage(void);
 
 
 /**************** gameOk ****************/
