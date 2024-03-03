@@ -108,7 +108,7 @@ bool player_move(player_t* player, grid_t* grid, int dx, int dy);
  * Notes:
  *   does not delete the player object; memory cleanup must be done separately.
  */
-void player_quit(player_t* player);
+void player_quit(player_t* player, grid_t* grid);
 
 
 /***************** player_get_name *****************/

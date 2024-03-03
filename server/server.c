@@ -216,7 +216,7 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 		}
 		else if (strcmp(keyStroke, "Q") == 0)
 		{
-			player_quit(matchingPlayer);
+			player_quit(matchingPlayer, gameGrid);
 			message_send(from, "QUIT Thanks for playing!");
 		}
 		else if (strcmp(keyStroke, "H") == 0)
