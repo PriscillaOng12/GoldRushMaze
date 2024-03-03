@@ -17,6 +17,7 @@
 #include "mem.h"
 #include "../support/message.h"
 
+static bool grid_hasplayerat(grid_t* grid, int x, int y);
 
 typedef struct grid {
     char** cells;
@@ -131,6 +132,10 @@ void grid_init_gold(grid_t* grid) {
         fprintf(stderr, "Error: too few spots to place gold\n");
         exit(1);
     }
+    if (ndots < 26) {
+        fprintf(stderr, "Error: grid cannot fit 26 players; it can only fit %d\n", ndots);
+        exit(1);
+    }
     int numPiles = GoldMinNumPiles + rand() %  ((ndots > GoldMaxNumPiles ? (GoldMaxNumPiles) : (ndots)) - GoldMinNumPiles + 1);
     int piles[numPiles];
     for (int i = 0; i < GoldTotal; i++) {
@@ -211,13 +216,14 @@ void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name) {
         x = rand() % *grid->rows;
         y = rand() % *grid->columns;
       
-        if (grid->cells[x][y] == '.') { // if its empty
+        if (grid->cells[x][y] == '.' && !(grid_hasplayerat(grid, x, y))) { // if its empty
             // ensure no existing player or gold there.
             // Place new player with new symbol
             player_t* new_player = player_new(connection_info, real_name, x, y, *grid->rows, *grid->columns);
             player_update_visibility(new_player, grid);
-            grid->players[*grid->playerCount] = new_player; // add the player to the player arraay
+            grid->players[*grid->playerCount] = new_player; // add the player to the player array
             *grid->playerCount = *grid->playerCount + 1;
+            player_move(new_player, grid, 0, 0); // makes sure if gold is on new player tile then it is collected.
             break; // Exit the loop once a valid spot is found
         }
     }
@@ -239,7 +245,7 @@ char* grid_send_state(grid_t* grid, player_t* player) {
     char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
     int k;
     for (k = 0; k < *grid->rows; k++) {
-        message_vis[k] = mem_assert(calloc(*grid->columns, sizeof(char*)), "Error allocating space for player message");
+        message_vis[k] = mem_assert(calloc(*grid->columns, sizeof(char)), "Error allocating space for player message");
     }
     int px, py;
     for (k = 0; k < *grid->playerCount; k++) {
@@ -292,30 +298,35 @@ char* grid_send_state_spectator(grid_t* grid) {
         char** message_vis = (char**) mem_assert(calloc(*grid->rows, sizeof(char*)), "Error allocating space for message grid");
         int k;
         for (k = 0; k < *grid->rows; k++) {
-            message_vis[k] = mem_assert(calloc(*grid->columns, sizeof(char*)), "Error allocating space for player message");
+            message_vis[k] = mem_assert(calloc(*grid->columns, sizeof(char)), "Error allocating space for player message");
         }
         int px, py;
         for (k = 0; k < *grid->playerCount; k++) {
             if (player_get_isactive(grid->players[k])) {
                 px = player_get_x(grid->players[k]);
                 py = player_get_y(grid->players[k]);
+                printf("%c: (%d, %d)", 65+k, px, py);
                 message_vis[px][py] = (char) (65 + k);
             }
         }
 
         for (int i = 0; i < *grid->rows; i++) {
             for (int j = 0; j < *grid->columns; j++) {
-                    if ((message_vis[i][j] < 65 || message_vis[i][j] > 90)) {
-                        if (grid->nuggets[i][j] > 0) {
-                            message_vis[i][j] = '*';
-                        } else {
-                            message_vis[i][j] = grid->cells[i][j];
-                        }
-                        *moving_ptr = message_vis[i][j];
+                printf("%c", message_vis[i][j] == 0 ? ' ' : message_vis[i][j]);
+            }
+            printf("\n");
+        }
+        for (int i = 0; i < *grid->rows; i++) {
+            for (int j = 0; j < *grid->columns; j++) {
+                if (message_vis[i][j] == 0) {
+                    if (grid->nuggets[i][j] > 0) {
+                        message_vis[i][j] = '*';
                     } else {
-                        *moving_ptr = grid->cells[i][j];
+                        message_vis[i][j] = grid->cells[i][j];
                     }
-                    moving_ptr++;
+                }
+                *moving_ptr = message_vis[i][j];
+                moving_ptr++;
                 }
             *moving_ptr = '\n';
             moving_ptr++;
@@ -362,6 +373,19 @@ void grid_game_over(grid_t* grid) {
     grid_delete(grid);
     free(message);
     free(buffer);
+}
+
+static bool grid_hasplayerat(grid_t* grid, int x, int y) {
+    bool res = false;
+    player_t* p;
+    for (int i = 0; i < *grid->playerCount; i++) {
+        p = grid->players[i];
+        if (player_get_x(p) == x && player_get_y(p) == y) {
+            res = true;
+            break;
+        }
+    }
+    return res;
 }
 
 int grid_getnrows(grid_t* grid) {
