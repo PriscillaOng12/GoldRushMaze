@@ -273,7 +273,7 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
         Print error message "Error: too few spots to place gold"
         Exit the program
     Calculate numPiles, ensuring it's between GoldMinNumPiles and the lesser of GoldMaxNumPiles or ndots
-    Initialize an array piles[numPiles] to keep track of gold nuggets in each pile
+    Initialize an array piles to keep track of gold nuggets in each pile
     Distribute GoldTotal nuggets across the piles randomly
     For each pile in piles:
         Repeat until a pile is placed:
