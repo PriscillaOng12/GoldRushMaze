@@ -234,7 +234,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       return false;
     }
     else {
-      message_send(from, "ERROR unknown keystroke");
+      message_send(from, "ERROR: unknown keystroke");
       return false;
     }
     free(keyStroke);
