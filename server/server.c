@@ -191,7 +191,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     //find matching player in list of players to find out which player to move
     player_t* matchingPlayer = NULL;
     for (int i = 0; i < playerCount; i++) {
-      const addr_t playerAddr = *player_get_addr(playerList[i]); //WILL THIS WORK?????
+      const addr_t playerAddr = *player_get_addr(playerList[i]);
       if (message_eqAddr(from, playerAddr)) {
         matchingPlayer = playerList[i];
         break;
@@ -199,31 +199,30 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     }
     
     char* keyStroke = malloc(128);
-    strcpy(keyStroke, message + 4); //DOES THIS WORK
+    strcpy(keyStroke, message + 4);
     if (strcmp(keyStroke, "h") == 0) { //CAPITAL CHARACTER FIX, CHECK IF SPECTATOR
-      player_moveto(matchingPlayer, -1, 0);
+      player_move(matchingPlayer, gameGrid, -1, 0);
     }
     else if (strcmp(keyStroke, "l") == 0) {
-      player_moveto(matchingPlayer, 1, 0);
+      player_move(matchingPlayer, gameGrid, 1, 0);
     }
     else if (strcmp(keyStroke, "j") == 0) {
-      printf("hello");
-      player_moveto(matchingPlayer, 0, -1);
+      player_move(matchingPlayer, gameGrid, 0, -1);
     }
     else if (strcmp(keyStroke, "k") == 0) {
-      player_moveto(matchingPlayer, 0, 1);
+      player_move(matchingPlayer, gameGrid, 0, 1);
     }
     else if (strcmp(keyStroke, "y") == 0) {
-      player_moveto(matchingPlayer, -1, 1);
+      player_move(matchingPlayer, gameGrid, -1, 1);
     }
     else if (strcmp(keyStroke, "u") == 0) {
-      player_moveto(matchingPlayer, 1, 1);
+      player_move(matchingPlayer, gameGrid, 1, 1);
     }
     else if (strcmp(keyStroke, "b") == 0) {
-      player_moveto(matchingPlayer, -1, -1);
+      player_move(matchingPlayer, gameGrid, -1, -1);
     }
     else if (strcmp(keyStroke, "n") == 0) {
-      player_moveto(matchingPlayer, 1, -1);
+      player_move(matchingPlayer, gameGrid, 1, -1);
     }
     else if (strcmp(keyStroke, "Q") == 0) {
       free(keyStroke);
