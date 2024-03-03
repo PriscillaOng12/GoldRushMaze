@@ -1,0 +1,57 @@
+START OF LOG
+message_init: ready at port '36165'
+message_send: TO 127.0.1.1:47651
+message_send: 1 lines:
+PLAY name
+message_loop: message ready on socket
+message_loop: FROM 127.0.0.1:47651
+message_loop: 1 lines:
+OK A
+message_loop: message ready on socket
+message_loop: FROM 127.0.0.1:47651
+message_loop: 1 lines:
+GRID 5 14
+message_loop: message ready on socket
+message_loop: FROM 127.0.0.1:47651
+message_loop: 1 lines:
+GOLD 0 0 140
+message_loop: message ready on socket
+message_loop: FROM 127.0.0.1:47651
+message_loop: 6 lines:
+DISPLAY
+  +----------+
+  |********.*|
+  |.*..**.***|
+  |.**..**@**|
+  +----------+
+
+message_loop: message ready on socket
+message_loop: FROM 127.0.0.1:47651
+message_loop: 6 lines:
+DISPLAY
+  +----------+
+  |********.*|
+  |.*..**.***|
+  |.**..**.**|
+  +----------+
+
+message_loop: message ready on socket
+message_loop: FROM 127.0.0.1:47651
+message_loop: 6 lines:
+DISPLAY
+  +----------+
+  |********.*|
+  |.*..**.***|
+  |.**..**.**|
+  +----------+
+
+message_loop: select() EINTR: interrupted by signal: Interrupted system call
+message_loop: input ready on stdin
+message_send: TO 127.0.1.1:47651
+message_send: 1 lines:
+KEY 3
+message_loop: message ready on socket
+message_loop: FROM 127.0.0.1:47651
+message_loop: 1 lines:
+ERROR unknown keystroke
+ERROR unknown keystroke
