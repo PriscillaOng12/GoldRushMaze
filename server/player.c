@@ -11,6 +11,7 @@
 #include <string.h>
 #include <math.h>
 #include "player.h"
+#include "spectator.h"
 #include "grid.h"
 #include "mem.h"
 #include "message.h"
@@ -259,6 +260,12 @@ void player_collect_gold(player_t *player, grid_t *grid, int gold_x, int gold_y)
                 }
                 free(message);
             }
+        }
+        if (grid_getspectatorCount(grid) == 1) {
+            char *message = (char *)mem_assert(malloc(sizeof(char) * 50), "Error allocating memory for gold message string\n"); // GOLD N P R
+            sprintf(message, "GOLD 0 0 %d", grid_getnuggetcount(grid));
+            message_send(*spectator_get_addr(grid_getspectator(grid)), message);
+            free(message);
         }
     }
 }

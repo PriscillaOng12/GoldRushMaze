@@ -172,12 +172,28 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 				break;
 			}
 		}
-		if (matchingPlayer == NULL)
-		{
-			return updateall(gameGrid);
-		}
 		char *keyStroke = malloc(128);
 		strcpy(keyStroke, message + 4);
+		// special case: check spectator
+		if (strcmp(keyStroke, "Q") == 0 && matchingPlayer == NULL) {
+			if (grid_getspectatorCount(gameGrid) == 1) 
+			{
+				spectator_t* spectator = grid_getspectator(gameGrid);
+				if (message_eqAddr(*spectator_get_addr(spectator), from)) {
+					spectator_quit(spectator, gameGrid);
+					message_send(from, "QUIT Thanks for playing!");
+				}
+			}
+			free(keyStroke);
+			free(firstWord);
+			return updateall(gameGrid);
+		}
+		if (matchingPlayer == NULL || player_get_isactive(matchingPlayer) == false) {
+			free(keyStroke);
+			free(firstWord);
+			return updateall(gameGrid);
+		}
+
 		if (strcmp(keyStroke, "h") == 0)
 		{ // CAPITAL CHARACTER FIX, CHECK IF SPECTATOR
 			player_move(matchingPlayer, gameGrid, -1, 0);
@@ -212,21 +228,12 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 		}
 		else if (strcmp(keyStroke, "Q") == 0)
 		{
-			free(keyStroke);
-			if (matchingPlayer == NULL)
-			{
-				message_send(from, "QUIT Thanks for watching!");
-				return false;
-			}
+			player_quit(matchingPlayer);
 			message_send(from, "QUIT Thanks for playing!");
-			return false;
 		}
 		else
 		{
 			message_send(from, "ERROR unknown keystroke");
-			free(firstWord);
-			free(keyStroke);
-			return false;
 		}
 		free(keyStroke);
 		free(firstWord);
@@ -242,24 +249,6 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 		message_send(from, messageToSend);
 		free(messageToSend);
 		free(firstWord);
-		return updateall(gameGrid);
-	}
-	else if (strcmp(firstWord, "QUIT") == 0)
-	{
-		player_t *matchingPlayer = NULL;
-		for (int i = 0; i < playerCount; i++)
-		{
-			const addr_t playerAddr = *player_get_addr(playerList[i]);
-			if (message_eqAddr(from, playerAddr))
-			{
-				matchingPlayer = playerList[i];
-				break;
-			}
-		}
-		if (player == NULL)
-		{
-			player_quit(matchingPlayer);
-		}
 		return updateall(gameGrid);
 	}
 	else
