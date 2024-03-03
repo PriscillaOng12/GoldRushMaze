@@ -1,9 +1,9 @@
 /*
- * grid.c - CS50 'grid' module
+ * grid.c - 'grid' module
  *
  * see grid.h for more information.
  *
- * Ctrl ZZZ, Winter 2024
+ * ctrl-zzz, Winter 2024
  */
 
 #include <stdio.h>
@@ -400,12 +400,12 @@ void grid_game_over(grid_t *grid)
             {
                 message_send(*playerAddress, message);
             }
-            else
-            {
-                // printf("%s\n", message);
-            }
         }
         player_delete(grid_getplayers(grid)[i], grid);
+    }
+    if (grid_getspectatorCount(grid) == 1) {
+        spectator_t* spectator = grid_getspectator(grid);
+        spectator_quit(spectator, grid); // calls delete under the hood
     }
 
     grid_delete(grid);

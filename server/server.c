@@ -1,5 +1,9 @@
-/**
- * Server blah blah
+/*
+ * server.c - 'server' file
+ *
+ * Runs server for Nuggets game
+ * Most of the processing is handled by handleMessage.
+ * ctrl-zzz, Winter 2024
  */
 
 #include <stdio.h>
@@ -8,8 +12,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "../support/log.h"
-#include "../support/message.h"
+#include "log.h"
+#include "message.h"
 #include "file.h"
 #include "grid.h"
 #include "player.h"
@@ -36,11 +40,7 @@ int main(const int argc, const char **argv)
 		return 1;
 	}
 	fprintf(stdout, "Server port is: %d", serverPort);
-	char *mapPath = malloc(strlen(argv[1]) + 9);
-	strcpy(mapPath, "../maps/");
-	strcat(mapPath, argv[1]);
-	FILE *fp = fopen(mapPath, "r");
-	free(mapPath);
+	FILE *fp = fopen(argv[1], "r");
 	grid_t *gameGrid = grid_load(fp);
 	fclose(fp);
 	grid_init_gold(gameGrid);
@@ -54,27 +54,18 @@ int main(const int argc, const char **argv)
 }
 
 static bool parseArgs(const int argc, const char **argv)
-{ // CHANGE IMPLEMENTATION
-
-	// validate there are 2 or 3 args
-	if (argc > 3 || argc < 2)
+{
 	{
-		fprintf(stderr, "usage : %s map.txt [seed], your command must have two arguments", argv[0]);
+		fprintf(stderr, "Usage : %s map.txt [seed], your command must have either 1 or two arguments\n", argv[0]);
 		return false;
 	}
 
-	// validate file can be opened
-	char *mapPath = malloc(strlen(argv[1]) + 9);
-	strcpy(mapPath, "../maps/");
-	strcat(mapPath, argv[1]);
-	FILE *fp = fopen(mapPath, "r");
+	FILE *fp = fopen(argv[1], "r");
 	if (fp == NULL)
 	{
 		fprintf(stderr, "map file could not be opened");
-		free(mapPath);
 		return false;
 	}
-	free(mapPath);
 	fclose(fp);
 
 	// assumes seed will be integer
