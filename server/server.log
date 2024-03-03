@@ -1,97 +1,84 @@
 START OF LOG
-message_init: ready at port '39059'
+message_init: ready at port '47651'
 message_loop: message ready on socket
-message_loop: FROM 127.0.0.1:47668
+message_loop: FROM 127.0.0.1:41663
 message_loop: 1 lines:
-PLAY myname
-message_send: TO 127.0.0.1:47668
-message_send: 1 lines:
-OK A
-message_send: TO 127.0.0.1:47668
+SPECTATE
+message_send: TO 127.0.0.1:41663
 message_send: 1 lines:
 GRID 5 14
-message_send: TO 127.0.0.1:47668
+message_send: TO 127.0.0.1:41663
 message_send: 1 lines:
-GOLD 0 0 0
-message_send: TO 127.0.0.1:47668
+GOLD 0 0 70
+message_send: TO 127.0.0.1:41663
 message_send: 6 lines:
 DISPLAY
   +----------+
-  |..........|
-  |@.........|
-  |..........|
+  |****..**.*|
+  |.*...*...*|
+  |.*......**|
   +----------+
 
-message_send: TO 127.0.0.1:47668
+message_send: TO 127.0.0.1:41663
 message_send: 6 lines:
 DISPLAY
   +----------+
-  |..........|
-  |@.........|
-  |..........|
+  |****..**.*|
+  |.*...*...*|
+  |.*......**|
   +----------+
 
 message_loop: message ready on socket
-message_loop: FROM 127.0.0.1:55913
+message_loop: FROM 127.0.0.1:36165
 message_loop: 1 lines:
 PLAY name
-message_send: TO 127.0.0.1:55913
+message_send: TO 127.0.0.1:36165
 message_send: 1 lines:
-OK B
-message_send: TO 127.0.0.1:55913
+OK A
+message_send: TO 127.0.0.1:36165
 message_send: 1 lines:
 GRID 5 14
-message_send: TO 127.0.0.1:55913
+message_send: TO 127.0.0.1:36165
 message_send: 1 lines:
-GOLD 0 0 0
-message_send: TO 127.0.0.1:55913
+GOLD 0 0 140
+message_send: TO 127.0.0.1:36165
 message_send: 6 lines:
 DISPLAY
   +----------+
-  |..........|
-  |A......@..|
-  |..........|
+  |********.*|
+  |.*..**.***|
+  |.**..**@**|
   +----------+
 
-message_send: TO 127.0.0.1:55913
+message_send: TO 127.0.0.1:36165
 message_send: 6 lines:
 DISPLAY
   +----------+
-  |..........|
-  |@......B..|
-  |..........|
+  |********.*|
+  |.*..**.***|
+  |.**..**.**|
   +----------+
 
-message_send: TO 127.0.0.1:55913
+message_send: TO 127.0.0.1:36165
 message_send: 6 lines:
 DISPLAY
   +----------+
-  |..........|
-  |A......@..|
-  |..........|
+  |********.*|
+  |.*..**.***|
+  |.**..**.**|
   +----------+
 
 message_loop: message ready on socket
-message_loop: FROM 127.0.0.1:55913
+message_loop: FROM 127.0.0.1:36165
 message_loop: 1 lines:
-KEY š
-message_send: TO 127.0.0.1:55913
+KEY 3
+message_send: TO 127.0.0.1:36165
 message_send: 1 lines:
 ERROR unknown keystroke
 message_loop: message ready on socket
-message_loop: FROM 127.0.0.1:55913
+message_loop: FROM 127.0.0.1:41663
 message_loop: 1 lines:
-KEY j
-message_send: TO 127.0.0.1:55913
-message_send: 3 lines:
-GAME OVER:
-Player A | Score: 000 | Name: myname
-Player B | Score: 000 | Name: name
-
-message_send: TO 127.0.0.1:55913
-message_send: 3 lines:
-GAME OVER:
-Player A | Score: 000 | Name: myname
-Player B | Score: 000 | Name: name
-
-message_done: message module closing down.
+KEY c
+message_send: TO 127.0.0.1:41663
+message_send: 1 lines:
+ERROR unknown keystroke

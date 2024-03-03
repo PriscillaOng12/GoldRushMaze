@@ -102,7 +102,6 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
   int firstSpace = 0;
   while (!isspace(message[firstSpace])) {
     firstSpace++;
-    printf("%d", firstSpace);
   }
   //amount of bytes needed for first word of message + 1 for null terminating
   firstWord = malloc(firstSpace + 1);
@@ -158,6 +157,9 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     message_send(from, messageToSend);
     free(messageToSend);
 
+    //initialize gold in grid
+    grid_init_gold(gameGrid);
+
     //send initial GOLD message
     messageToSend = malloc(128);
     sprintf(messageToSend, "GOLD 0 0 %d", grid_getnuggetcount(gameGrid));
@@ -172,7 +174,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
         messageToSend = malloc(128);
         messageToSend = grid_send_state(gameGrid, playerList[i]);
         message_send(*player_get_addr(playerList[i]), messageToSend);
-        free(message);
+        free(messageToSend);
       }
     }
     //if there is spectator, send them updated DISPLAY
@@ -180,7 +182,8 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     {
       messageToSend = malloc(128);
       messageToSend = grid_send_state_spectator(gameGrid);
-      message_send(*spectator_get_addr(grid_getspectator), messageToSend);
+      message_send(*spectator_get_addr(grid_getspectator(gameGrid)), messageToSend);
+      free(messageToSend);
     }
     return false;
   }
@@ -204,6 +207,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       player_moveto(matchingPlayer, 1, 0);
     }
     else if (strcmp(keyStroke, "j") == 0) {
+      printf("hello");
       player_moveto(matchingPlayer, 0, -1);
     }
     else if (strcmp(keyStroke, "k") == 0) {
@@ -247,7 +251,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
         char* messageToSend = malloc(128);
         messageToSend = grid_send_state(gameGrid, playerList[i]);
         message_send(*player_get_addr(playerList[i]), messageToSend);
-        free(message);
+        free(messageToSend);
       }
     }
     //if there is spectator, send them updated DISPLAY
@@ -256,6 +260,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
       char* messageToSend = malloc(128);
       messageToSend = grid_send_state_spectator(gameGrid);
       message_send(*spectator_get_addr(grid_getspectator), messageToSend);
+      free(messageToSend);
     }
     return false;
   }
@@ -277,6 +282,8 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     message_send(from, messageToSend);
     free(messageToSend);
 
+    grid_init_gold(gameGrid);
+
     //send initial GOLD message
     messageToSend = malloc(128);
     sprintf(messageToSend, "GOLD 0 0 %d", grid_getnuggetcount(gameGrid));
@@ -284,6 +291,7 @@ static bool handleMessage(void* arg, const addr_t from, const char* message) {
     free(messageToSend);
 
     //send DISPLAY message
+    messageToSend = malloc(128);
     messageToSend = grid_send_state_spectator(gameGrid);
     message_send(from, messageToSend);
     free(messageToSend);
