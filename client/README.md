@@ -35,6 +35,7 @@ More information on each component in the program is available in the `.h` files
 * `Makefile` - compilation procedure
 * `client.c` - the implementation of the player/spectator logic
 * `client.h` - the interface of client
+* `testing.sh` - unit testing with given server
 
 
 ### Compilation
