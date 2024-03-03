@@ -160,9 +160,9 @@ void grid_init_gold(grid_t *grid)
     int piles[numPiles];
     for (int i = 0; i < numPiles; i++)
     {
-        piles[i] = 0;
+        piles[i] = 1;
     }
-    for (int i = 0; i < GoldTotal; i++)
+    for (int i = 0; i < GoldTotal - numPiles; i++)
     {
         int k = rand() % numPiles;
         piles[k] = piles[k] + 1;
