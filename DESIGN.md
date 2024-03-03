@@ -64,12 +64,18 @@ We log all communication messages originating from the player (along with destin
 
 ### Function prototypes
 ```c
-int main(int argc, char* argv[])
-static int parseArgs(const int argc, char* argv[]);
-static bool setupWindow(void);
-static void playGame(const addr_t serverAddress);
-static bool handleMessages(void* arg, const addr_t* from, const char* message);
+static bool handleMessage(void* arg, const addr_t from, const char* message);
 static bool handleInput(void* arg);
+static void cursesInit(); 
+static void setupWindow();
+static void displayMap(char* display);
+static void displayTempMessage(const char* temp);
+static void clearTempMessage();
+static bool gameOk(const char* message);
+static bool gameGrid(const char* message);
+static bool gameGold(const char* message);
+static void gameDisplay(const char* message);
+static localclient_t* data_new();
 ```
  
 ### Function definitions and Pseudo code for logic/algorithmic flow
@@ -77,44 +83,49 @@ static bool handleInput(void* arg);
 #### Overview
 The client will run as follows:
 ```
-Validate that either 3 or 4 arguments were passed in the command line
-Verify hostname (or IP address) and port number and determine player or spectator mode
-Initialize display
-Initialize network and join game with a `PLAY` or `SPECTATE` message to server, accordingly
-Receive `GRID`, `GOLD`, and `DISPLAY` messages from server
-Calls handleMessage() to appropriately react to each of these messages
-If player mode
-		Wait for input
-Call handleInput which sends keystrokes to the server
-If spectator mode
-    Display entire grid
-    Wait for `GOLD` and `DISPLAY` messages and continuously update the display as players move and collect gold. 
-Calls handleMessage() to parse message and update display accordingly
+	Validate that either 3 or 4 arguments were passed in the command line
+	Verify hostname (or IP address) and port number and determine player or spectator mode
+	Initialize display
+	Initialize network and join game with a `PLAY` or `SPECTATE` message to server, accordingly
+	Receive `GRID`, `GOLD`, and `DISPLAY` messages from server
+	Calls handleMessage() to appropriately react to each of these messages
+	If player mode
+			Wait for input
+	Call handleInput which sends keystrokes to the server
+	If spectator mode
+		Display entire grid
+		Wait for `GOLD` and `DISPLAY` messages and continuously update the display as players move and collect gold. 
+	Calls handleMessage() to parse message and update display accordingly
 ```
 
 
 #### `int main(int argc, char* argv[])`:
 The `main` function calls `parseArgs` and other functions.
 ```
-	call parseArgs
-	call playGame
+	Start
+	Check if the number of command-line arguments is either 3 or 4
+		If not, print error message and exit with code 1
+	For each argument starting from the first (ignoring the program name itself):
+		If any argument is NULL, print an error message and exit with code 2
+	Initialize the data structure
+		If initialization fails, print an error, free resources, and exit with code 3
+	Prepare the server address using the provided hostname and port
+		If address preparation fails, print an error, free resources, and exit with code 4
+	If a player name is provided (indicating 4 arguments were passed):
+		Send "PLAY <playername>" message to the server to connect as a player
+		If sending fails, send a "KEY Q" message to quit, clean up, and exit with code 6
+	Else (only hostname and port were provided):
+		Send "SPECTATE" message to the server to connect as a spectator
+		If connection fails, follow the same quit procedure as in step 6.2
+	Enter a loop to handle input from the user and messages from the server
+		If the loop exits indicating failure, proceed to cleanup
+	Clean up resources:
+		Free the data structure
+		Close the curses window
+		Shut down the message module
+	Exit the program with 0 on success or 1 on failure from the loop
 ```
 
-#### `static int parseArgs(const int argc, char* argv[])`:
-`parseArgs` takes the command line arguments as parameters, validates them, and assigns them to be passed through pointers if valid.
-```
-	validate command line arguments
-	initialize message module
-	get serverAddress
-	print assigned port number
-	if there are 4 arguments:
-		send PLAY [playername]
-	if there are 3 arguments
-		Send SPECTATE
-	else:
-		print error message for incorrect number of arguments
-		exit
-```
 
 #### `static bool setupWindow(void)`:
 `setupWindow` sets up a game window using the ncurse library with a given row and column size.
@@ -122,13 +133,6 @@ The `main` function calls `parseArgs` and other functions.
 	initialize ncurses window 
 	set window to nRows nColumns
 	call cbreak
-```
-
-#### `static void playGame(const addr_t serverAddress)`:
-`playGame` is essentially the main driver of the client. It runs the message loop until the game is quit and will continuously parse received messages and send messages through the loop. It will also call print display to reprint the display.
-```
-	while player hasn’t quit game:
-		call messageLoop with NULL for handleInput and handleMessage
 ```
 
 #### `static bool handleMessages(void* arg, const addr_t* from, const char* message)`:
