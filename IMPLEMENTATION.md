@@ -196,44 +196,60 @@ Player:
 
 ### Detailed pseudo code
 #### `grid_t* grid_load(char* filename)`:
-	Read the map file line by line
-	Parse each character in the file to form the grid
+	Allocate memory for a grid_t structure.
+	Allocate memory for grid rows and columns integers.
+	Initialize variables to count rows, columns, and the maximum number of columns.
+	Read through the file character by character to determine the number of rows and columns.
+	Allocate memory for grid cells and nuggets, initializing them accordingly.
+	Rewind the file to the beginning.
+	Populate the grid cells by reading the file again, setting cells based on file content.
+	Initialize additional grid properties like player count, nugget count, etc.
+	Return the populated grid structure.
 
 #### `int grid_init_gold(grid_t* grid)`:
-	Calculate the number of gold piles to be dropped within a certain area
-	Iterate through the room spots to randomly 
-Drop gold nugget piles with at least 1 nugget per pile
-Update the grid to reflect the gold piles 
+	Define the total amount of gold and the range for the number of gold piles.
+	Randomly determine the number of gold piles to be placed.
+	Place gold piles on random cells within the grid, ensuring each pile has at least one nugget.
+	Increment the grid's nugget count accordingly.
+	Return the number of gold piles placed.
+	
 
-#### `void grid_spawn_player(grid_t* grid)`:
-	Calculate random spot on the grid
-	Place new player with new symbol
-If player is already in spot
-		Calculate another random spot
+#### `void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`:
+	Randomly select a cell (until cell words)
+		If the cell is empty ('.'), place a new player there.
+		Update the player's visibility on the grid.
+		Increment the grid's player count.
 
-#### `void grid_spawn_spectator(grid_t* grid)`:
-	Calculate random spot on the grid
+#### `void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`:
 	Place new spectator 
 	If spectator is already present
 		Kick them off and replace
 
 #### `void grid_send_state(grid_t* grid, player_t* player)`:
-	Create a message about current game state
-	Send the message to the specified player client.
+	Allocate memory for a message string.
+	Prepare a visibility map for the player.
+	Iterate over the grid, adding visible elements to the message string based on the player's visibility and the grid's state.
+	Free memory used for the visibility map.
+	Return the message string.
 	
-#### `void grid_send_state(grid_t* grid, spectator_t* spectator)`:
-	Create a message about current game state
-	Send the message to the specified spectator client.
+#### `void grid_send_state_spectator(grid_t* grid, spectator_t* spectator)`:
+	If there is a spectator, prepare a complete view of the grid for them.
+	Allocate memory for a message string and populate it with the grid state.
+	If the spectator has a valid address, send them the message; otherwise, print the message.
+	Free memory used for the message preparation.
+	Return the message string.
 
 #### `void grid_game_over(grid_t* grid)`:
-	Iterate over each player 
-	Calculate the final score 
-	Create summary containing purse contents, score and name
-	Send game summary to all clients
-	Terminate game
+	Allocate memory for a message string to summarize the game outcome.
+	Iterate over each player, compiling their score and other details into the message.
+	Send the summary message to each active player or print it.
+	Delete each player and then the grid itself.
+	Free memory used for the message preparation.
 	
 #### `void grid_delete(grid_t* grid)`:
-	Deallocate memory associated with the game grid 
+	Free memory allocated for grid cells and nuggets.
+	Free memory for other grid properties like player count, rows, columns, etc.
+	Finally, free the grid structure itself.
 
 ## Player module
 
