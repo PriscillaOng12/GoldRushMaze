@@ -215,7 +215,7 @@ handleMessage(void* arg, const addr_t from, const char* message)
     // log error
     fprintf(stderr, "%s\n", message);
     // display to player
-    const char* temp = strchr(message, ':') + 1;
+    const char* temp = strchr(message, ' ') + 1;
     display_temp_message(temp);
     return false;
 
