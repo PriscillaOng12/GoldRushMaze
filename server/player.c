@@ -149,6 +149,7 @@ void player_update_visibility(player_t *player, grid_t *grid)
             }
             else
             {
+                player_set_visibility(player, x, y, 1);
                 for (int dx = -1; dx <= 1; dx = dx + 2)
                 {
                     if (0 <= x + dx && x + dx < grid_getnrows(grid))
