@@ -224,59 +224,102 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
 
 `int grid_init_gold(grid_t* grid)`: Drops gold piles on the grid at the start of the game.
 
-`void grid_spawn_player(grid_t* grid)`: Randomly places a player onto a spot on the grid.
+`void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`: Randomly places a player onto a spot on the grid.
 
-`void grid_spawn_spectator(grid_t* grid)`: Places a spectator.
+`void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`: Places a spectator and ensures only one spectator is present on the grid at one time.
 
 `void grid_send_state(grid_t* grid, player_t* player)`: Sends the current game state to a player client.
 
-`void grid_send_state(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
+`void grid_send_state_spectator(grid_t* grid, spectator_t* spectator)`: Sends the current game state to a spectator client.
+
+`void grid_delete(grid_t* grid)`: Frees the grid and allocated memory/resources required for it. 
 
 `void grid_game_over(grid_t* grid)`: Handles the end of the game by preparing a summary and cleaning up.
 
-`void grid_delete(grid_t* grid)`: Cleans up and deallocates memory associated with grid.
+** Getter functions included as helper functions to faciliatate easy integration. 
 
 ### Pseudo code for logic/algorithmic flow
 
 #### `grid_t* grid_load(char* filename)`:
-	Read the map file line by line
-	Parse each character in the file to form the grid
+	Allocate memory for a new grid structure
+    Allocate and initialize memory for storing the number of rows and columns in the grid
+    Initialize variables for counting rows, columns, and tracking the maximum number of columns
+    Read through the file character by character:
+        If a newline character is encountered:
+            Increment the row count
+            Update the maximum number of columns if the current row's column count is greater
+            Reset the column count for the next row
+        Otherwise, increment the column count for the current row
+    If the file does not end with a newline:
+        Treat the last line as a row, increment the row count, and update the maximum column count if necessary
+    Assign the calculated number of rows and maximum column count to the grid
+    Allocate memory for the grid's cell and nugget arrays:
+        For each row, allocate memory for its cells and initialize them
+        For each row, allocate memory for nugget counts and initialize them to 0
+    Rewind the file to the beginning
+    Read the file again to fill in the grid's cells:
+        For each character in the file that is not a newline, assign it to the appropriate cell
+        Fill in any remaining cells in a row with a default character if the row is shorter than the maximum column count
+    Allocate and initialize additional properties of the grid (player count, nugget count, spectator count, arrays for players and spectators)
+    Return the initialized grid
 
 #### `int grid_init_gold(grid_t* grid)`:
-	Calculate the number of gold piles to be dropped within a certain area
-	Iterate through the room spots to randomly 
-Drop gold nugget piles with at least 1 nugget per pile
-Update the grid to reflect the gold piles 
+	  Initizlize gold total, min and max number of piles
+    Initialize ndots to 0
+    For each cell in the grid:
+        If cell is empty ('.'):
+            Increment ndots
+    If ndots is less than GoldMinNumPiles:
+        Print error message "Error: too few spots to place gold"
+        Exit the program
+    Calculate numPiles, ensuring it's between GoldMinNumPiles and the lesser of GoldMaxNumPiles or ndots
+    Initialize an array piles to keep track of gold nuggets in each pile
+    Distribute GoldTotal nuggets across the piles randomly
+    For each pile in piles:
+        Repeat until a pile is placed:
+            Randomly select a grid cell (x, y)
+            If the cell is empty and has no nuggets:
+                Assign the number of nuggets in the current pile to this cell
+                Break the loop
+    Set the total nugget count in the grid to numPiles
+	
 
-#### `void grid_spawn_player(grid_t* grid)`:
-	Calculate random spot on the grid
-	Place new player with new symbol
-If player is already in spot
-		Calculate another random spot
+#### `void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`:
+	Randomly select a cell (until cell words)
+		If the cell is empty ('.'), place a new player there.
+		Update the player's visibility on the grid.
+		Increment the grid's player count.
 
-#### `void grid_spawn_spectator(grid_t* grid)`:
-	Calculate random spot on the grid
+#### `void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`:
 	Place new spectator 
 	If spectator is already present
 		Kick them off and replace
 
 #### `void grid_send_state(grid_t* grid, player_t* player)`:
-	Create a message about current game state
-	Send the message to the specified player client.
+	Allocate memory for a message string.
+	Prepare a visibility map for the player.
+	Iterate over the grid, adding visible elements to the message string based on the player's visibility and the grid's state.
+	Free memory used for the visibility map.
+	Return the message string.
 	
-#### `void grid_send_state(grid_t* grid, spectator_t* spectator)`:
-	Create a message about current game state
-	Send the message to the specified spectator client.
+#### `void grid_send_state_spectator(grid_t* grid, spectator_t* spectator)`:
+	If there is a spectator, prepare a complete view of the grid for them.
+	Allocate memory for a message string and populate it with the grid state.
+	If the spectator has a valid address, send them the message; otherwise, print the message.
+	Free memory used for the message preparation.
+	Return the message string.
 
 #### `void grid_game_over(grid_t* grid)`:
-	Iterate over each player 
-	Calculate the final score 
-	Create summary containing purse contents, score and name
-	Send game summary to all clients
-	Terminate game
+	Allocate memory for a message string to summarize the game outcome.
+	Iterate over each player, compiling their score and other details into the message.
+	Send the summary message to each active player or print it.
+	Delete each player and then the grid itself.
+	Free memory used for the message preparation.
 	
 #### `void grid_delete(grid_t* grid)`:
-	Deallocate memory associated with the game grid 
+	Free memory allocated for grid cells and nuggets.
+	Free memory for other grid properties like player count, rows, columns, etc.
+	Finally, free the grid structure itself.
 	
 ### Major data structures
 Grid:
@@ -293,21 +336,23 @@ A module that handles the player's data: their name, position, purse, and the ce
 
 ### Functional decomposition
 
-`player_t* player_new(char* name, char* conn_info, int x, int y)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
+`player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
 
-`void player_move(player_t* player) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
+`bool player_move(player_t* player, grid_t* grid, int dx, int dy) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
 
-`void player_collect_gold(player_t* player, int gold_x, int gold_y)`: Updates the player's purse and the location of the gold piles, and sends a `GOLD` message to all clients with updated locations.
+`void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y)`: Updates the player's purse and the location of the gold piles, and sends a `GOLD` message to all clients with updated locations.
 
-`void player_update_visibility(player_t* player)`: Updates the player's visibility layer. Called by `player_move`.
+`void player_update_visibility(player_t* player, grid_t* grid)`: Updates the player's visibility layer. Called by `player_move`.
 
-`void player_quit(player_t* player, grid_t* grid)`: Called by grid module when a player quits. Gracefully handles quit, then calls `player_delete`.
+`void player_quit(player_t* player)`: Called by grid module when a player quits. Gracefully handles quit, then calls `player_delete`.
 
-`player_delete(player_t* player)`: Deallocates memory associated with the player.
+`player_delete(player_t* player, grid_t* grid)`: Deallocates memory associated with the player.
+
+** Getter and setter functions included as helper functions to faciliatate easy integration. 
 
 ### Pseudo code for logic/algorithmic flow
 
-#### `player_t* player_new(char* name, char* conn_info, int x, int y)`
+#### `player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`
 Trivial constructor for a new player.
 
 #### `void player_move(player_t* player, int dx, int dy, grid_t* grid) `
@@ -325,14 +370,14 @@ Trivial constructor for a new player.
         do nothing
 ```
 
-#### `void player_collect_gold(player_t* player, int gold_x, int gold_y, grid_t* grid)`
+#### `void player_collect_gold(player_t* player, grid_t* grid, int gold_x, int gold_y, grid_t* grid)`
 ```
     update player's purse
     update gold pile's value in grid
     decrement number of remaining gold piles in grid
     send a GOLD message to all clients with updated locations
 ```
-#### `void player_update_visibility(player_t* player, grid_t* grid, hashmap_t* cache)`
+#### `void player_update_visibility(player_t* player, grid_t* grid)`
 This function is cached **[FOR EXTRA CREDIT]** in a hashmap: if **any** previous player has been at the spot, we store all cells that are visible from that spot. If not, we compute the visibility layer from scratch and cache it.
 ```
     x, y = player's position
@@ -355,9 +400,9 @@ This function is cached **[FOR EXTRA CREDIT]** in a hashmap: if **any** previous
 ```
 [Note: this algorithm runs in O(mn(m+n)) time, where the grid has size (m,n). We could optimize to O(mn) at the cost of simplicity, using trigonometry.]
 
-#### `void player_quit(player_t* player, grid_t* grid)`
+#### `void player_quit(player_t* player)`
 Trivial function that removes player from grid, then calls `player_delete`.
-#### `player_delete(player_t* player)`
+#### `player_delete(player_t* player),grid_t* grid`
 Trivial function to delete.
 
 ### Major data structures
@@ -370,24 +415,24 @@ A module that handles the spectator data: their connection info. It handles send
 
 ### Functional decomposition
 
-`spectator_t* spectator_new(char* conn_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+`spectator_t* spectator_new(addr_t* connection_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
-`void spectator_get_map(spectator_t* spectator, grid_t* grid)`: Constructs and sends display message to spectator.
+`addr_t* spectator_get_addr(spectator_t* spectator)`: Get the address of a spectator.
 
-`void spectator_quit(spectator_t* player)`: Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
+`void spectator_quit(spectator_t* player, grid_t* grid)`: Called by grid module when a player quits. Sends a `QUIT` message to server, and calls `spectator_delete`.
 
 `spectator_delete(spectator_t* spectator)`: Deallocates memory associated with the spectator.
 
 ### Pseudo code for logic/algorithmic flow
 
-#### `spectator_t* spectator_new(char* conn_info)`
+#### `spectator_t* spectator_new(addr_t* connection_info)`
 Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
-#### `void spectator_get_map(spectator_t* spectator, grid_t* grid)`
+#### `addr_t* spectator_get_addr(spectator_t* spectator)`
 Constructs and sends display message to spectator.
 
-#### `void spectator_quit(spectator_t* spectator)`
-Trivial function, which gracefully handles
+#### `void spectator_quit(spectator_t* player, grid_t* grid)`
+Get the address of a spectator.
 
 #### `spectator_delete(spectator_t* spectator)`
 Trivial function to deallocate memory associated with the spectator.
