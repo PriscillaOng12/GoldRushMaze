@@ -22,7 +22,7 @@ typedef struct spectator spectator_t;
  *   the caller is responsible for managing the memory of the addr_t* passed in.
  *   the caller must call spectator_delete to free the spectator object's memory.
  */
-spectator_t* spectator_new(addr_t* connection_info);
+spectator_t* spectator_new(const addr_t connection_info);
 
 /***************** spectator_delete *****************/
 /* Delete a spectator object.

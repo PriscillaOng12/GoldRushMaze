@@ -60,7 +60,7 @@ void grid_delete(grid_t* grid);
  * Notes:
  *   updates the player count and initializes player visibility.
  */
-void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name);
+void grid_spawn_player(grid_t* grid, const addr_t connection_info, char* real_name);
 
 /***************** grid_spawn_spectator *****************/
 /* Add a spectator to the grid.

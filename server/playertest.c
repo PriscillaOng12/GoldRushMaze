@@ -44,17 +44,17 @@ int main(int argc, char* argv[]) {
     int** res =  player_get_visibility(player);
     char** map = grid_getcells(grid);
     print_map(map, nr, nc, grid_getnuggets(grid));
-    printf("New position: (%d, %d)\n", player_get_x(player), player_get_y(player));
-    char* message = grid_send_state_spectator(grid);
-    printf("%s\n", message);
-    free(message);
+    // printf("New position: (%d, %d)\n", player_get_x(player), player_get_y(player));
+    // char* message = grid_send_state_spectator(grid);
+    // printf("%s\n", message);
+    // free(message);
     int int1;
     int int2;
     while (scanf("%d %d", &int1, &int2) == 2) {
         player_move(player, grid, int1, int2);
-        char* message = grid_send_state_spectator(grid);
-        printf("%s\n", message);
-        free(message);
+        // char* message = grid_send_state_spectator(grid);
+        // printf("%s\n", message);
+        // free(message);
         print_curr_state(res, map, nr, nc, player, grid);
     }
     // player_quit(player_2);

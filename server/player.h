@@ -28,7 +28,7 @@ typedef struct player player_t;
  *   visibility matrix is initialized based on grid dimensions.
  *   the caller must call player_delete to free the player object's memory.
  */
-player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols);
+player_t* player_new(const addr_t connection_info, char* real_name, int x, int y, int nrows, int ncols);
 
 /***************** player_update_visibility *****************/
 /* Update the visibility matrix for a player based on their current position.
