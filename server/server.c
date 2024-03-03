@@ -231,6 +231,38 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 			player_quit(matchingPlayer);
 			message_send(from, "QUIT Thanks for playing!");
 		}
+		else if (strcmp(keyStroke, "H") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, -1, 0)) {} // fancy way of doing till returns false!
+		}
+		else if (strcmp(keyStroke, "L") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, 1, 0)) {}
+		}
+		else if (strcmp(keyStroke, "J") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, 0, -1)) {}
+		}
+		else if (strcmp(keyStroke, "K") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, 0, 1)) {}
+		}
+		else if (strcmp(keyStroke, "Y") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, -1, 1)) {}
+		}
+		else if (strcmp(keyStroke, "U") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, 1, 1)) {}
+		}
+		else if (strcmp(keyStroke, "B") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, -1, -1)) {}
+		}
+		else if (strcmp(keyStroke, "N") == 0)
+		{
+			while (player_move(matchingPlayer, gameGrid, 1, -1)) {} 
+		}
 		else
 		{
 			message_send(from, "ERROR unknown keystroke");
