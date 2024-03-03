@@ -1,9 +1,9 @@
 /*
- * grid.c - CS50 'grid' module
+ * grid.c - 'grid' module
  *
  * see grid.h for more information.
  *
- * Ctrl ZZZ, Winter 2024
+ * ctrl-zzz, Winter 2024
  */
 
 #include <stdio.h>
@@ -15,8 +15,8 @@
 #include "player.h"
 #include "spectator.h"
 #include "mem.h"
-#include "../support/message.h"
-#include "../support/log.h"
+#include "message.h"
+#include "log.h"
 
 static bool grid_hasplayerat(grid_t *grid, int x, int y);
 
@@ -160,9 +160,9 @@ void grid_init_gold(grid_t *grid)
     int piles[numPiles];
     for (int i = 0; i < numPiles; i++)
     {
-        piles[i] = 0;
+        piles[i] = 1;
     }
-    for (int i = 0; i < GoldTotal; i++)
+    for (int i = 0; i < GoldTotal - numPiles; i++)
     {
         int k = rand() % numPiles;
         piles[k] = piles[k] + 1;
@@ -400,12 +400,12 @@ void grid_game_over(grid_t *grid)
             {
                 message_send(*playerAddress, message);
             }
-            else
-            {
-                // printf("%s\n", message);
-            }
         }
         player_delete(grid_getplayers(grid)[i], grid);
+    }
+    if (grid_getspectatorCount(grid) == 1) {
+        spectator_t* spectator = grid_getspectator(grid);
+        spectator_quit(spectator, grid); // calls delete under the hood
     }
 
     grid_delete(grid);

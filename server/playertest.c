@@ -34,36 +34,20 @@ int main(int argc, char* argv[]) {
     grid_init_gold(grid);
     int nr = grid_getnrows(grid);
     int nc = grid_getncols(grid);
-
-    grid_spawn_player(grid, NULL, "tester2");
-    grid_spawn_player(grid, NULL, "tester3");
-    grid_spawn_player(grid, NULL, "tester4");
+    
+    grid_spawn_player(grid, message_noAddr(), "tester");
     player_t* player = grid_getplayers(grid)[0];
-    spectator_t* spectator = spectator_new(NULL);
-    grid_spawn_spectator(grid, spectator);
     int** res =  player_get_visibility(player);
     char** map = grid_getcells(grid);
     print_map(map, nr, nc, grid_getnuggets(grid));
-    // printf("New position: (%d, %d)\n", player_get_x(player), player_get_y(player));
-    // char* message = grid_send_state_spectator(grid);
-    // printf("%s\n", message);
-    // free(message);
     int int1;
     int int2;
+    printf("Enter move coords\n");
     while (scanf("%d %d", &int1, &int2) == 2) {
         player_move(player, grid, int1, int2);
-        // char* message = grid_send_state_spectator(grid);
-        // printf("%s\n", message);
-        // free(message);
         print_curr_state(res, map, nr, nc, player, grid);
+        printf("Enter move coords\n");
     }
-    // player_quit(player_2);
-    // rewind(stdin);
-    // while (scanf("%d %d", &int1, &int2) == 2) {
-    //     player_move(player, grid, int1, int2);
-    //     print_curr_state(res, map, nr, nc, player, grid);
-    // }
-    spectator_quit(spectator, grid);
     grid_game_over(grid);
     fclose(file);
     return EXIT_SUCCESS;

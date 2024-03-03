@@ -1,83 +1,38 @@
-# # Compiler
-# CC = gcc
-# # Compiler flags
-# CFLAGS = -Wall -Wextra -std=c11 -I../support
+SRCS = player.c spectator.c grid.c
 
-# LIBS = ../support/log.c ../support/message.c
-# # Source files
-# SOURCES = file.c grid.c player.c mem.c spectator.c
-# GRIDTESTSRC = file.c grid.c player.c spectator.c gridtest.c mem.c
-# PLAYERTESTSRC = file.c grid.c player.c spectator.c playertest.c mem.c
-# # Object files
-# OBJECTS = $(SOURCES:.c=.o)
-# # Executables
-# EXECUTABLES = gridtest playertest
+OBJS = player.o spectator.o grid.o
 
-# # Main target
-# all: $(EXECUTABLES)
-
-# # Compile object files
-# $(OBJECTS): $(SOURCES)
-
-# gridtest.o: $(GRIDTESTSRC)
-
-# playertest.o: $(PLAYERTESTSRC)
-# # Compile executables
-# gridtest: $(OBJECTS) $(LIBS) gridtest.o
-# 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
-
-# playertest: $(OBJECTS) playertest.o
-# 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
-
-# server: server.o $(SOURCES) $(LIBS)
-# 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
-
-# # Clean target
-# clean:
-# 	rm -f $(EXECUTABLES) $(OBJECTS)
-
+PROG = server
+LIBS = ../support/support.a ../libcs50/libcs50.a
 
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -I../support -ggdb
+CFLAGS = -Wall -pedantic -std=c11 -ggdb -I../libcs50 -I../support
+LDFLAGS = -lm
+MAKE = make
 
-# Libraries are compiled into object files, not included directly in the final link command
-LIBS_O = ../support/log.o ../support/message.o
+$(PROG): server.o $(OBJS)
+	$(CC) $(CFLAGS) $^ $(LIBS) $(LDFLAGS) -o $@
 
-# Source files
-SOURCES = file.c grid.c player.c mem.c spectator.c
-# For executables, don't repeat common source files in the test source variable definitions
-GRIDTESTSRC = gridtest.c
-PLAYERTESTSRC = playertest.c
+test: gridtest playertest
 
-# Object files for the main sources and for the test sources
-OBJECTS = $(SOURCES:.c=.o)
-GRIDTESTOBJ = $(GRIDTESTSRC:.c=.o)
-PLAYERTESTOBJ = $(PLAYERTESTSRC:.c=.o)
+gridtest: gridtest.o $(OBJS)
+	$(CC) $(CFLAGS) $^ $(LIBS) $(LDFLAGS) -o $@
 
-# Executables
-EXECUTABLES = gridtest playertest
+playertest: playertest.o $(OBJS)
+	$(CC) $(CFLAGS) $^ $(LIBS) $(LDFLAGS) -o $@
 
-# Main target
-all: $(EXECUTABLES)
 
-# Compile support library object files
-../support/%.o: ../support/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+server.o: server.c ../libcs50/file.h ../libcs50/mem.h ../support/message.h ../support/log.h player.h spectator.h grid.h
 
-# Compile object files for the main sources
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Compile executables
-gridtest: $(OBJECTS) $(GRIDTESTOBJ) $(LIBS_O)
-	$(CC) $(CFLAGS) $^ -o $@ -lm
+.PHONY: all clean test
 
-playertest: $(OBJECTS) $(PLAYERTESTOBJ) $(LIBS_O)
-	$(CC) $(CFLAGS) $^ -o $@ -lm
+all: $(PROG)
 
-server: server.o $(OBJECTS) $(LIBS) ../support/message.o ../support/log.o
-	$(CC) $(CFLAGS) $^ $(LIBS) -o $@ -lm
-
-# Clean target
 clean:
-	rm -f $(EXECUTABLES) $(OBJECTS) ../support/*.o *.o
+	rm -f *~ *.o *.dSYM
+	rm -f $(PROG)
+	rm -f gridtest playertest
+	rm -f server.log
