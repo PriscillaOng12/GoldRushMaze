@@ -15,8 +15,8 @@
 #include "player.h"
 #include "spectator.h"
 #include "mem.h"
-#include "../support/message.h"
-#include "../support/log.h"
+#include "message.h"
+#include "log.h"
 
 static bool grid_hasplayerat(grid_t *grid, int x, int y);
 

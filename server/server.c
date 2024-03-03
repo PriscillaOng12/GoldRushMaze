@@ -47,8 +47,6 @@ int main(const int argc, const char **argv)
 	message_loop(gameGrid, 0, NULL, NULL, handleMessage);
 	message_done();
 	fclose(logFP);
-	grid_game_over(gameGrid);
-
 	return 0;
 }
 
