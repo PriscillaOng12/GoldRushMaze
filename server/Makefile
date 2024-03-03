@@ -1,3 +1,8 @@
+# Makefile for Server
+#
+# ctrl-zzz, Winter 2024
+# 
+
 SRCS = player.c spectator.c grid.c
 
 OBJS = player.o spectator.o grid.o

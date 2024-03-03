@@ -1,3 +1,12 @@
+/* 
+ * player.h - header file for 'player' module
+ * 
+ * A "player" represents a character participating in the two-dimensional grid-based game and can move around the grid, 
+ * interact with its environment (such as collecting gold nuggets).
+ *
+ * ctrl-zzz, Winter 2024
+ */
+
 #ifndef PLAYER_H
 #define PLAYER_H
 
@@ -210,3 +219,4 @@ void player_set_visibility(player_t* player, int x, int y, int val);
 bool player_get_isactive(player_t* player);
 
 #endif //__PLAYER_H
+

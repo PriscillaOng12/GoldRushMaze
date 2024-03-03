@@ -492,7 +492,7 @@ Player:
 
 `int grid_init_gold(grid_t* grid)`: Drops gold piles on the grid at the start of the game.
 
-`void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`: Randomly places a player onto a spot on the grid.
+`void grid_spawn_player(grid_t* grid, addr_t connection_info, char* real_name)`: Randomly places a player onto a spot on the grid.
 
 `void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`: Places a spectator and ensures only one spectator is present on the grid at one time.
 
@@ -548,7 +548,7 @@ Player:
                 Break the loop
     Set the total nugget count in the grid to numPiles
 
-#### `void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`:
+#### `void grid_spawn_player(grid_t* grid, addr_t connection_info, char* real_name)`:
 	Randomly select a cell (until cell words)
 		If the cell is empty ('.'), place a new player there.
 		Update the player's visibility on the grid.
@@ -593,7 +593,7 @@ The only extra data structure is the visibility layer, which is a 2D Boolean arr
 
 ### Definition of function prototypes
 
-`player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
+`player_t* player_new(addr_t connection_info, char* real_name, int x, int y, int nrows, int ncols)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
 
 `bool player_move(player_t* player, grid_t* grid, int dx, int dy) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
 
@@ -609,7 +609,7 @@ The only extra data structure is the visibility layer, which is a 2D Boolean arr
 
 ### Detailed pseudo code
 
-#### `player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`
+#### `player_t* player_new(addr_t connection_info, char* real_name, int x, int y, int nrows, int ncols)`
 Trivial constructor for a new player.
 
 #### `void player_move(player_t* player, int dx, int dy, grid_t* grid) `
@@ -668,7 +668,7 @@ Trivial function to delete.
 No specific data structures are used.
 
 ### Definition of function prototypes
-`spectator_t* spectator_new(addr_t* connection_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+`spectator_t* spectator_new(addr_t connection_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
 `addr_t* spectator_get_addr(spectator_t* spectator)`: Get the address of a spectator.
 
@@ -678,7 +678,7 @@ No specific data structures are used.
 
 ### Detailed pseudo code
 
-#### `spectator_t* spectator_new(addr_t* connection_info)`
+#### `spectator_t* spectator_new(addr_t connection_info)`
 Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
 #### `addr_t* spectator_get_addr(spectator_t* spectator)`

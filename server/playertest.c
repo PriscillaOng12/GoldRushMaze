@@ -1,3 +1,9 @@
+/*
+ * playertest.c - testing player module 
+ *
+ * ctrl-zzz, Winter 2024
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

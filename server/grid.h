@@ -1,3 +1,15 @@
+/* 
+ * grid.h - header file for 'grid' module
+ * 
+ * A "grid" is a data structure used to represent a two-dimensional game board for a multiplayer game with elements of exploration,
+ * resource gathering (specifically gold nuggets) and  competition among players. 
+ *
+ * ctrl-zzz, Winter 2024
+ */
+
+#ifndef GRID_H
+#define GRID_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -268,3 +280,4 @@ int grid_getspectatorCount(grid_t* grid);
 void grid_setspectatorCount(grid_t* grid, int count);
 
 
+#endif //__GRID_H

@@ -1,3 +1,8 @@
+# Makefile for client 
+#
+# ctrl-zzz, Winter 2024
+# 
+
 PROG = client
 LIBS = ../support/support.a ../libcs50/libcs50.a
 

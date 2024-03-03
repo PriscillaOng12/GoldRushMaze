@@ -1,3 +1,7 @@
+# Makefile for game
+#
+# ctrl-zzz, Winter 2024
+# 
 MAKE = make
 
 .PHONY: all
