@@ -350,7 +350,7 @@ void grid_game_over(grid_t* grid) {
     char* message = (char*)malloc(129 * 26 * sizeof(char));
     *message = '\0';
     char* buffer = (char*)malloc(129 * sizeof(char));
-    strcat(message, "GAME OVER:\n");
+    strcat(message, "QUIT GAME OVER:\n");
     for (int i = 0; i < *grid->playerCount; i++) {
         int purse = player_get_purse(grid->players[i]);
         char* name = player_get_name(grid->players[i]);
