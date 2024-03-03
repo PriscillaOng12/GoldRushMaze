@@ -32,11 +32,11 @@ grid_t* grid_load(FILE* file);
  *   a valid grid object.
  * We guarantee:
  *   gold nuggets are placed randomly across the grid.
- *   the total number of nuggets placed is returned.
  * Notes:
  *   modifies the grid's nugget configuration.
+ *   modifies the total nugget count of the grid
  */
-int grid_init_gold(grid_t* grid);
+void grid_init_gold(grid_t* grid);
 
 /***************** grid_delete *****************/
 /* Delete the grid and free associated resources.
