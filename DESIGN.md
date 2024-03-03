@@ -241,22 +241,47 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
 ### Pseudo code for logic/algorithmic flow
 
 #### `grid_t* grid_load(char* filename)`:
-	Allocate memory for a grid_t structure.
-	Allocate memory for grid rows and columns integers.
-	Initialize variables to count rows, columns, and the maximum number of columns.
-	Read through the file character by character to determine the number of rows and columns.
-	Allocate memory for grid cells and nuggets, initializing them accordingly.
-	Rewind the file to the beginning.
-	Populate the grid cells by reading the file again, setting cells based on file content.
-	Initialize additional grid properties like player count, nugget count, etc.
-	Return the populated grid structure.
+	Allocate memory for a new grid structure
+    Allocate and initialize memory for storing the number of rows and columns in the grid
+    Initialize variables for counting rows, columns, and tracking the maximum number of columns
+    Read through the file character by character:
+        If a newline character is encountered:
+            Increment the row count
+            Update the maximum number of columns if the current row's column count is greater
+            Reset the column count for the next row
+        Otherwise, increment the column count for the current row
+    If the file does not end with a newline:
+        Treat the last line as a row, increment the row count, and update the maximum column count if necessary
+    Assign the calculated number of rows and maximum column count to the grid
+    Allocate memory for the grid's cell and nugget arrays:
+        For each row, allocate memory for its cells and initialize them
+        For each row, allocate memory for nugget counts and initialize them to 0
+    Rewind the file to the beginning
+    Read the file again to fill in the grid's cells:
+        For each character in the file that is not a newline, assign it to the appropriate cell
+        Fill in any remaining cells in a row with a default character if the row is shorter than the maximum column count
+    Allocate and initialize additional properties of the grid (player count, nugget count, spectator count, arrays for players and spectators)
+    Return the initialized grid
 
 #### `int grid_init_gold(grid_t* grid)`:
-	Define the total amount of gold and the range for the number of gold piles.
-	Randomly determine the number of gold piles to be placed.
-	Place gold piles on random cells within the grid, ensuring each pile has at least one nugget.
-	Increment the grid's nugget count accordingly.
-	Return the number of gold piles placed.
+	  Initizlize gold total, min and max number of piles
+    Initialize ndots to 0
+    For each cell in the grid:
+        If cell is empty ('.'):
+            Increment ndots
+    If ndots is less than GoldMinNumPiles:
+        Print error message "Error: too few spots to place gold"
+        Exit the program
+    Calculate numPiles, ensuring it's between GoldMinNumPiles and the lesser of GoldMaxNumPiles or ndots
+    Initialize an array piles[numPiles] to keep track of gold nuggets in each pile
+    Distribute GoldTotal nuggets across the piles randomly
+    For each pile in piles:
+        Repeat until a pile is placed:
+            Randomly select a grid cell (x, y)
+            If the cell is empty and has no nuggets:
+                Assign the number of nuggets in the current pile to this cell
+                Break the loop
+    Set the total nugget count in the grid to numPiles
 	
 
 #### `void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`:
