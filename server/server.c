@@ -55,7 +55,7 @@ int main(const int argc, const char **argv)
 
 static bool parseArgs(const int argc, const char **argv)
 {
-	{
+	if (argc < 2 || argc > 3) {
 		fprintf(stderr, "Usage : %s map.txt [seed], your command must have either 1 or two arguments\n", argv[0]);
 		return false;
 	}
