@@ -114,37 +114,64 @@ grid_t* grid_load(FILE* file) {
     return grid;    // Return the grid structure
 }
 
-int grid_init_gold(grid_t* grid) {
+void grid_init_gold(grid_t* grid) {
     int GoldTotal = 250;
     int GoldMinNumPiles = 10;
     int GoldMaxNumPiles = 30;
-    // srand(time(NULL));
 
-    // Calculate the number of gold piles to be dropped within a certain area
-    int num_gold = GoldMinNumPiles + rand() % (GoldMaxNumPiles - GoldMinNumPiles + 1);
-
-    if (num_gold * 1 > GoldTotal) {
-        num_gold = GoldTotal;
-    }
-
-    // Drop gold nugget piles with at least 1 nugget per pile
-
-    int gold_placed = 0;
-    while (gold_placed < num_gold) {
-        int x = rand() % *grid->rows;
-        int y = rand() % *grid->columns;
-        if (grid->cells[x][y] == '.') {
-            grid->nuggets[x][y] += 1; // increment nugget count
-            gold_placed++;
-        }
-    }
-
+    int ndots = 0;
     for (int i = 0; i < *grid->rows; i++) {
         for (int j = 0; j < *grid->columns; j++) {
-            (*grid->nuggetCount)++;
+            if (grid->cells[i][j] == '.') {
+                ndots++;
+            }
         }
     }
-    return num_gold;
+    if (ndots < GoldMinNumPiles) {
+        fprintf(stderr, "Error: too few spots to place gold\n");
+        exit(1);
+    }
+    int numPiles = GoldMinNumPiles + rand() %  ((ndots > GoldMaxNumPiles ? (GoldMaxNumPiles) : (ndots)) - GoldMinNumPiles + 1);
+    int piles[numPiles];
+    for (int i = 0; i < GoldTotal; i++) {
+        piles[rand() % numPiles]++;
+    }
+    for (int i = 0; i < numPiles; i++) {
+        int x, y;
+        do {
+            x = rand() % *grid->rows;
+            y = rand() % *grid->columns;
+            if (grid->cells[x][y] == '.' && grid->nuggets[x][y] == 0) {
+                grid->nuggets[x][y] = piles[i];
+                break;
+            }
+        } while (true);       
+    }
+    *grid->nuggetCount = numPiles;
+
+    // int num_gold = GoldMinNumPiles + rand() % (GoldMaxNumPiles - GoldMinNumPiles + 1);
+    
+    // if (num_gold * 1 > GoldTotal) {
+    //     num_gold = GoldTotal;
+    // }
+
+    // // Drop gold nugget piles with at least 1 nugget per pile
+
+    // int gold_placed = 0;
+    // while (gold_placed < num_gold) {
+    //     int x = rand() % *grid->rows;
+    //     int y = rand() % *grid->columns;
+    //     if (grid->cells[x][y] == '.') {
+    //         grid->nuggets[x][y] += 1; // increment nugget count
+    //         gold_placed++;
+    //     }
+    // }
+
+    // for (int i = 0; i < *grid->rows; i++) {
+    //     for (int j = 0; j < *grid->columns; j++) {
+    //         (*grid->nuggetCount)++;
+    //     }
+    // }
 }
 
 
@@ -258,7 +285,6 @@ char* grid_send_state(grid_t* grid, player_t* player) {
     
 char* grid_send_state_spectator(grid_t* grid) {
     if (*grid->spectatorCount == 1) {
-        spectator_t* spectator = grid_getspectator(grid);
         char* message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char*));
         *message = '\0';
         strcpy(message, "DISPLAY\n");
@@ -296,14 +322,7 @@ char* grid_send_state_spectator(grid_t* grid) {
         }
 
         *moving_ptr = '\0';
-
-        addr_t* address = spectator_get_addr(spectator);
-        if (address != NULL) {
-            message_send(*address, message);
-        } else {
-            printf("%s\n", message);
-        }
-        for (int k = 0; k < *grid->playerCount; k++) {
+        for (int k = 0; k < *grid->rows; k++) {
             free(message_vis[k]);
         }
         free(message_vis);

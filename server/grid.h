@@ -11,7 +11,7 @@ typedef struct player player_t;
 typedef struct spectator spectator_t;
 
 grid_t* grid_load(FILE* file);
-int grid_init_gold(grid_t* grid);
+void grid_init_gold(grid_t* grid);
 void grid_delete(grid_t* grid);
 void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name);
 void grid_spawn_spectator(grid_t* grid, spectator_t* spectator);
