@@ -135,7 +135,7 @@ The `main` function calls `parseArgs` and other functions.
 	call cbreak
 ```
 
-#### `static bool handleMessages(void* arg, const addr_t* from, const char* message)`:
+#### `static bool handleMessages(void* arg, const addr_t from, const char* message)`:
 `handleMessage` parses the incoming message to interpret the type of message and displays information onto the game window Everytime a message is received from the server, this function is called to handle the message. The details of each received message (`QUIT`, `OK`, `GRID`, `GOLD`, `DISPLAY`, and `ERROR`) are explained further in the requirements specifications.
 ```
 	check message for NULL
@@ -228,7 +228,7 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
 
 `int grid_init_gold(grid_t* grid)`: Drops gold piles on the grid at the start of the game.
 
-`void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`: Randomly places a player onto a spot on the grid.
+`void grid_spawn_player(grid_t* grid, addr_t connection_info, char* real_name)`: Randomly places a player onto a spot on the grid.
 
 `void grid_spawn_spectator(grid_t* grid, spectator_t* spectator)`: Places a spectator and ensures only one spectator is present on the grid at one time.
 
@@ -288,7 +288,7 @@ We utilize a grid struct, which uses a 2-D array to store player position inform
     Set the total nugget count in the grid to numPiles
 	
 
-#### `void grid_spawn_player(grid_t* grid, addr_t* connection_info, char* real_name)`:
+#### `void grid_spawn_player(grid_t* grid, addr_t connection_info, char* real_name)`:
 	Randomly select a cell (until cell words)
 		If the cell is empty ('.'), place a new player there.
 		Update the player's visibility on the grid.
@@ -340,7 +340,7 @@ A module that handles the player's data: their name, position, purse, and the ce
 
 ### Functional decomposition
 
-`player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
+`player_t* player_new(addr_t connection_info, char* real_name, int x, int y, int nrows, int ncols)`: Initializes a new player with specified name, connection info and position. Returns pointer to `player` struct.
 
 `bool player_move(player_t* player, grid_t* grid, int dx, int dy) `: Updates the player's position and the location of conflicting players, calling `update_visibility` on all affected players, and sending a `DISPLAY` message to all clients with updated locations.
 
@@ -356,7 +356,7 @@ A module that handles the player's data: their name, position, purse, and the ce
 
 ### Pseudo code for logic/algorithmic flow
 
-#### `player_t* player_new(addr_t* connection_info, char* real_name, int x, int y, int nrows, int ncols)`
+#### `player_t* player_new(addr_t connection_info, char* real_name, int x, int y, int nrows, int ncols)`
 Trivial constructor for a new player.
 
 #### `void player_move(player_t* player, int dx, int dy, grid_t* grid) `
@@ -419,7 +419,7 @@ A module that handles the spectator data: their connection info. It handles send
 
 ### Functional decomposition
 
-`spectator_t* spectator_new(addr_t* connection_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
+`spectator_t* spectator_new(addr_t connection_info)`: Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
 `addr_t* spectator_get_addr(spectator_t* spectator)`: Get the address of a spectator.
 
@@ -429,7 +429,7 @@ A module that handles the spectator data: their connection info. It handles send
 
 ### Pseudo code for logic/algorithmic flow
 
-#### `spectator_t* spectator_new(addr_t* connection_info)`
+#### `spectator_t* spectator_new(addr_t connection_info)`
 Initializes a new spectator with specified connection info. Returns pointer to `spectator` struct.
 
 #### `addr_t* spectator_get_addr(spectator_t* spectator)`

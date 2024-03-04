@@ -101,7 +101,7 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 		firstSpace++;
 	}
 	// amount of bytes needed for first word of message + 1 for null terminating
-	firstWord = malloc(firstSpace + 1);
+	firstWord = mem_assert(malloc(firstSpace + 1), "Failed to allocate memory for firstWord.");
 	strncpy(firstWord, message, firstSpace);
 	firstWord[firstSpace] = '\0';
 
@@ -120,7 +120,7 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 			return false;
 		}
 		// truncate to MaxNameLength and replace characters that are both isgraph() and isblank()
-		char *real_name_truncated = malloc((MaxNameLength + 1) * sizeof(char));
+		char *real_name_truncated = mem_assert(malloc((MaxNameLength + 1) * sizeof(char)), "Failed to allocate memory for real_name_truncated.");
 		strncpy(real_name_truncated, real_name, MaxNameLength);
 		real_name_truncated[50] = '\0';
 		for (int i = 0; i < 50; i++)
@@ -134,7 +134,7 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 		free(real_name);
 		free(real_name_truncated);
 		int playerCount = grid_getplayercount(gameGrid);
-		char *messageToSend = malloc(128);
+		char *messageToSend = mem_assert(malloc(128), "Failed to allocate memory for messageToSend.");
 		char playerCharacter = (char)(64 + playerCount);
 		sprintf(messageToSend, "OK %c", playerCharacter);
 		message_send(from, messageToSend);
@@ -160,7 +160,7 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 				break;
 			}
 		}
-		char *keyStroke = malloc(128);
+		char *keyStroke = mem_assert(malloc(128), "Failed to allocate memory for keyStroke.");
 		strcpy(keyStroke, message + 4);
 		// special case: check spectator
 		if (strcmp(keyStroke, "Q") == 0 && matchingPlayer == NULL) {
@@ -262,7 +262,7 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 	else if (strcmp(firstWord, "SPECTATE") == 0)
 	{
 		grid_spawn_spectator(gameGrid, spectator_new(from));
-		char *messageToSend = malloc(128);
+		messageToSend = mem_assert(malloc(128), "Failed to allocate memory for messageToSend (re-allocation).");
 		sprintf(messageToSend, "GRID %d %d", grid_getnrows(gameGrid), grid_getncols(gameGrid));
 		message_send(from, messageToSend);
 		sprintf(messageToSend, "GOLD 0 0 %d", grid_getnuggetcount(gameGrid));

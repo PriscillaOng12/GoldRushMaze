@@ -1,3 +1,16 @@
+/*
+ * spectator.h - header file for 'spectator' module
+ * 
+ * A "spectator" represents an observer in the two-dimensional grid-based game. 
+ * Spectators can view the game's progress but do not interact with the game environment directly,
+ * such as moving around the grid or collecting gold nuggets.
+ *
+ * ctrl-zzz, Winter 2024
+ */
+
+#ifndef SPECTATOR_H
+#define SPECTATOR_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,3 +76,5 @@ void spectator_quit(spectator_t* spectator, grid_t* grid);
  *   the caller must not free the returned address through this function.
  */
 addr_t* spectator_get_addr(spectator_t* spectator);
+
+#endif //__SPECTATOR_H
