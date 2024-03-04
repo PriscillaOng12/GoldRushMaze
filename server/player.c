@@ -304,13 +304,13 @@ bool player_move(player_t *player, grid_t *grid, int dx, int dy)
 							sprintf(message, "GOLD %d %d %d", player_get_purse(players[i]), player_get_purse(player), grid_getnuggetcount(grid));
 							message_send(*player_get_addr(player), message);
 							free(message);
-							//make victim's purse 0
-							player_update_purse(players[i], -1 * player_get_purse(players[i]));
 							//send GOLD message for new victim's purse
 							message = malloc(128);
-							sprintf(message, "GOLD %d %d %d", -1 * player_get_purse(players[i]), player_get_purse(players[i]), grid_getnuggetcount(grid));
+							sprintf(message, "GOLD %d %d %d", -1 * player_get_purse(players[i]), 0, grid_getnuggetcount(grid));
 							message_send(*player_get_addr(players[i]), message);
 							free(message);
+							//make victim's purse 0
+							player_update_purse(players[i], -1 * player_get_purse(players[i]));
 						}
 						player_moveto(players[i], x, y);
 						//make victim invincible for one move
