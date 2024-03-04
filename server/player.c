@@ -300,12 +300,12 @@ bool player_move(player_t *player, grid_t *grid, int dx, int dy)
 							//add victim's purse to moving player's purse
 							player_update_purse(player, player_get_purse(players[i]));
 							//send GOLD message for new moving player's purse
-							char* message = malloc(128);
+							char* message = mem_assert(malloc(128), "Error allocating space for message");
 							sprintf(message, "GOLD %d %d %d", player_get_purse(players[i]), player_get_purse(player), grid_getnuggetcount(grid));
 							message_send(*player_get_addr(player), message);
 							free(message);
 							//send GOLD message for new victim's purse
-							message = malloc(128);
+							message = mem_assert(malloc(128), "Error allocating space for message");
 							sprintf(message, "GOLD %d %d %d", -1 * player_get_purse(players[i]), 0, grid_getnuggetcount(grid));
 							message_send(*player_get_addr(players[i]), message);
 							free(message);
