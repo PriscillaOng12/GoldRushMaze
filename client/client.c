@@ -25,6 +25,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include "message.h"
+#include "mem.h"
 
 /**************** global types ****************/
 typedef struct localclient {

@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "log.h"
+#include "mem.h"
 #include "message.h"
 #include "file.h"
 #include "grid.h"
@@ -262,7 +263,7 @@ static bool handleMessage(void *arg, const addr_t from, const char *message)
 	else if (strcmp(firstWord, "SPECTATE") == 0)
 	{
 		grid_spawn_spectator(gameGrid, spectator_new(from));
-		messageToSend = mem_assert(malloc(128), "Failed to allocate memory for messageToSend (re-allocation).");
+		char* messageToSend = mem_assert(malloc(128), "Failed to allocate memory for messageToSend (re-allocation).");
 		sprintf(messageToSend, "GRID %d %d", grid_getnrows(gameGrid), grid_getncols(gameGrid));
 		message_send(from, messageToSend);
 		sprintf(messageToSend, "GOLD 0 0 %d", grid_getnuggetcount(gameGrid));
