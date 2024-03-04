@@ -250,8 +250,7 @@ void grid_spawn_spectator(grid_t *grid, spectator_t *spectator)
 
 char *grid_send_state(grid_t *grid, player_t *player)
 {
-    char *message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char *));
-    strcpy(message, "DISPLAY\n");
+    char *message = mem_assert(malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char)), "Failed to allocate memory for message.");    strcpy(message, "DISPLAY\n");
     char *moving_ptr = message + 8; // index to iterate through message string
     int **visibility = player_get_visibility(player);
     char **message_vis = (char **)mem_assert(calloc(*grid->rows, sizeof(char *)), "Error allocating space for message grid");
@@ -319,7 +318,7 @@ char *grid_send_state_spectator(grid_t *grid)
 {
     if (*grid->spectatorCount == 1)
     {
-        char *message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char *));
+        char *message = mem_assert(malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char)), "Failed to allocate memory for message.");
         *message = '\0';
         strcpy(message, "DISPLAY\n");
         char *moving_ptr = message + 8; // index to iterate through message string
@@ -371,7 +370,7 @@ char *grid_send_state_spectator(grid_t *grid)
     }
     else
     {
-        char *message = malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char *));
+        char *message = mem_assert(malloc(((*grid->rows + 1) * (*grid->columns) + 10) * sizeof(char)), "Failed to allocate memory for message.");
         *message = '\0';
         return message;
     }
@@ -379,9 +378,9 @@ char *grid_send_state_spectator(grid_t *grid)
 
 void grid_game_over(grid_t *grid)
 {
-    char *message = (char *)malloc(129 * 26 * sizeof(char));
+    char *message = mem_assert(malloc(129 * 26 * sizeof(char)), "Failed to allocate memory for large message.");
     *message = '\0';
-    char *buffer = (char *)malloc(129 * sizeof(char));
+    char *buffer = mem_assert(malloc(129 * sizeof(char)), "Failed to allocate memory for buffer.");
     strcat(message, "QUIT GAME OVER:\n");
     for (int i = 0; i < *grid->playerCount; i++)
     {
