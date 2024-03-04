@@ -57,7 +57,7 @@ player_t *player_new(const addr_t connection_info, char *real_name, int x, int y
 	*(player->y) = y;
 	*(player->purse) = 0;
 	*(player->isactive) = true;
-	*(player->isInvincible) = false;
+	*(player->isInvincible) = true;
 	return player;
 }
 
@@ -372,17 +372,19 @@ void player_quit(player_t *player, grid_t *grid)
 		free(message);
 	}
 	//send updated messages to spectator
-	addr_t currentAddress = *spectator_get_addr(grid_getspectator(grid));
-	//construct GOLD message with updated total nuggets in game
-	char* message = mem_assert(malloc(128), "Error allocating space for message");
-	sprintf(message, "GOLD 0 0 %d", grid_getnuggetcount(grid) + player_get_purse(player));
-	message_send(currentAddress, message);
-	free(message);
-	
-	//send updated DISPLAY message
-	message = grid_send_state_spectator(grid);
-	message_send(currentAddress, message);
-	free(message);
+	if (grid_getspectatorCount(grid) == 1) {
+		addr_t currentAddress = *spectator_get_addr(grid_getspectator(grid));
+		//construct GOLD message with updated total nuggets in game
+		char* message = mem_assert(malloc(128), "Error allocating space for message");
+		sprintf(message, "GOLD 0 0 %d", grid_getnuggetcount(grid) + player_get_purse(player));
+		message_send(currentAddress, message);
+		free(message);
+		
+		//send updated DISPLAY message
+		message = grid_send_state_spectator(grid);
+		message_send(currentAddress, message);
+		free(message);
+	}
 
 	//quit player
 	*player->isactive = false;
