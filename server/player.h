@@ -209,4 +209,24 @@ void player_set_visibility(player_t* player, int x, int y, int val);
  */
 bool player_get_isactive(player_t* player);
 
+/***************** player_get_isinvincible *****************/
+/* Check if the player is currently invincible.
+ *
+ * Caller provides:
+ *   valid player object.
+ * We guarantee:
+ *   returns true if the player is invincible, false otherwise.
+ * Notes:
+ *   allows for checking the player's invincibility status in the game.
+ */
+bool player_get_isinvincible(player_t *player);
+
+/***************** player_set_isinvincible *****************/
+/* Set the player's invincibility.
+ *
+ * Caller provides:
+ *   valid player object.
+ */
+void player_set_isinvincible(player_t *player, bool invincible);
+
 #endif //__PLAYER_H

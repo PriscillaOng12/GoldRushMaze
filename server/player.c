@@ -32,6 +32,7 @@ typedef struct player
 	int *y;
 	int **visibility;
 	bool *isactive;
+	bool *isInvincible;
 } player_t;
 
 player_t *player_new(const addr_t connection_info, char *real_name, int x, int y, int nrows, int ncols)
@@ -51,10 +52,12 @@ player_t *player_new(const addr_t connection_info, char *real_name, int x, int y
 	player->y = (int *)mem_assert(malloc(sizeof(int)), "Error allocating space for y");
 	player->isactive = (bool *)mem_assert(malloc(sizeof(bool)), "Error allocating space for isactive");
 	player->purse = (int *)mem_assert(malloc(sizeof(int)), "Error allocating space for purse");
+	player->isInvincible = (bool *)mem_assert(malloc(sizeof(bool)), "Error allocating space for isInvincible");
 	*(player->x) = x;
 	*(player->y) = y;
 	*(player->purse) = 0;
 	*(player->isactive) = true;
+	*(player->isInvincible) = false;
 	return player;
 }
 
@@ -250,7 +253,7 @@ void player_collect_gold(player_t *player, grid_t *grid, int gold_x, int gold_y)
 			if (*(players[i]->isactive))
 			{
 				char *message = (char *)mem_assert(malloc(sizeof(char) * 50), "Error allocating memory for gold message string\n"); // GOLD N P R
-				sprintf(message, "GOLD %d %d %d", (players[i] == player ? gold_obtained : 0), *player->purse, grid_getnuggetcount(grid));
+				sprintf(message, "GOLD %d %d %d", (players[i] == player ? gold_obtained : 0), player_get_purse(players[i]), grid_getnuggetcount(grid));
 				if (player_get_addr((players[i])) != NULL)
 				{
 					message_send(*player_get_addr(players[i]), message);
@@ -274,6 +277,10 @@ void player_collect_gold(player_t *player, grid_t *grid, int gold_x, int gold_y)
 
 bool player_move(player_t *player, grid_t *grid, int dx, int dy)
 {
+	//if player is invincible, remove invincibility
+	if (player_get_isinvincible(player)) {
+		player_set_isinvincible(player, false);
+	}
 	int x = *player->x;
 	int y = *player->y;
 	if (0 <= x + dx && x + dx < grid_getnrows(grid) && 0 <= y + dy && y + dy < grid_getncols(grid))
@@ -285,9 +292,31 @@ bool player_move(player_t *player, grid_t *grid, int dx, int dy)
 			{
 				if (players[i]->isactive)
 				{
+					//if moving to spot with player already, steal gold if possible
 					if (player_get_x(players[i]) == x + dx && player_get_y(players[i]) == y + dy)
 					{
+						//if player on spot not invincible
+						if (!(player_get_isinvincible(players[i]))) {
+							//add victim's purse to moving player's purse
+							player_update_purse(player, player_get_purse(players[i]));
+							//send GOLD message for new moving player's purse
+							char* message = malloc(128);
+							sprintf(message, "GOLD %d %d %d", player_get_purse(players[i]), player_get_purse(player), grid_getnuggetcount(grid));
+							message_send(*player_get_addr(player), message);
+							free(message);
+							//make victim's purse 0
+							player_update_purse(players[i], -1 * player_get_purse(players[i]));
+							//send GOLD message for new victim's purse
+							message = malloc(128);
+							sprintf(message, "GOLD %d %d %d", -1 * player_get_purse(players[i]), player_get_purse(players[i]), grid_getnuggetcount(grid));
+							message_send(*player_get_addr(players[i]), message);
+							free(message);
+						}
 						player_moveto(players[i], x, y);
+						//make victim invincible for one move
+						player_set_isinvincible(players[i], true);
+						//make stealer invincible for one move
+						player_set_isinvincible(player, true);
 						break;
 					}
 				}
@@ -397,6 +426,16 @@ void player_set_visibility(player_t *player, int x, int y, int val)
 bool player_get_isactive(player_t *player)
 {
 	return *player->isactive;
+}
+
+bool player_get_isinvincible(player_t *player)
+{
+	return *player->isInvincible;
+}
+
+void player_set_isinvincible(player_t *player, bool invincible)
+{
+	*player->isInvincible = invincible;
 }
 
 static int min(int a, int b)
