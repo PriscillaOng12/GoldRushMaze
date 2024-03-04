@@ -412,7 +412,7 @@ static void gameDisplay(const char* message)
 static localclient_t* data_new()
 {
   // Allocate memory for a new localclient_t structure
-  localclient_t* data = malloc(sizeof(localclient_t));
+  localclient_t* data = mem_assert(malloc(sizeof(localclient_t)), "Failed to allocate memory for localclient_t.");
   if (data == NULL) {
     exit(3); // Exit if memory allocation fails
   }
