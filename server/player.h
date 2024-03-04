@@ -117,7 +117,7 @@ bool player_move(player_t* player, grid_t* grid, int dx, int dy);
  * Notes:
  *   does not delete the player object; memory cleanup must be done separately.
  */
-void player_quit(player_t* player);
+void player_quit(player_t* player, grid_t* grid);
 
 
 /***************** player_get_name *****************/
@@ -217,6 +217,26 @@ void player_set_visibility(player_t* player, int x, int y, int val);
  *   allows for checking the player's participation status in the game.
  */
 bool player_get_isactive(player_t* player);
+
+/***************** player_get_isinvincible *****************/
+/* Check if the player is currently invincible.
+ *
+ * Caller provides:
+ *   valid player object.
+ * We guarantee:
+ *   returns true if the player is invincible, false otherwise.
+ * Notes:
+ *   allows for checking the player's invincibility status in the game.
+ */
+bool player_get_isinvincible(player_t *player);
+
+/***************** player_set_isinvincible *****************/
+/* Set the player's invincibility.
+ *
+ * Caller provides:
+ *   valid player object.
+ */
+void player_set_isinvincible(player_t *player, bool invincible);
 
 #endif //__PLAYER_H
 
